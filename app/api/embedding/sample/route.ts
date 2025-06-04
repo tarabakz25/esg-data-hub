@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GeminiEmbeddingClient } from '@/lib/gemini-client';
+import { OpenRouterEmbeddingClient } from '@/lib/openrouter-client';
 import { SampleValueAnalyzer, type KPIGroupAnalysis } from '@/lib/sample-analyzer';
 import { CSVAnalyzer, type KPIGroupData } from '@/lib/csv-analyzer';
 import { prisma, VectorUtils } from '@/lib/prisma';
 
-const geminiClient = new GeminiEmbeddingClient();
+const openRouterClient = new OpenRouterEmbeddingClient();
 
 interface SampleEmbeddingRequest {
   dataRowId: number;
@@ -39,11 +39,11 @@ export async function POST(request: NextRequest) {
       ? sampleValues.slice(0, 5).join(', ') 
       : 'no samples';
     
-    // 3. Gemini用の検索テキスト作成
+    // 3. OpenRouter用の検索テキスト作成
     const hybridText = SampleValueAnalyzer.createEmbeddingSummary(analysis, columnName);
     
-    // 4. Gemini で埋め込み生成
-    const embedding = await geminiClient.generateEmbedding(hybridText);
+    // 4. OpenRouter で埋め込み生成
+    const embedding = await openRouterClient.generateEmbedding(hybridText);
 
     const processingTime = Date.now() - startTime;
 
@@ -54,17 +54,17 @@ export async function POST(request: NextRequest) {
       analysis,
       hybridText,
       embedding,
-      dimensions: embedding.length, // Geminiは768次元
+      dimensions: embedding.length, // OpenAI ada-002は1536次元
       processingTimeMs: processingTime,
-      provider: 'gemini',
+      provider: 'openrouter',
     });
 
   } catch (error) {
     console.error('Sample embedding generation failed:', error);
     
-    if (error instanceof Error && error.message.includes('Gemini')) {
+    if (error instanceof Error && error.message.includes('OpenRouter')) {
       return NextResponse.json(
-        { error: 'Gemini API error', details: error.message },
+        { error: 'OpenRouter API error', details: error.message },
         { status: 503 }
       );
     }
@@ -119,8 +119,8 @@ async function handleColumnBatchProcessing(columns: any[]) {
     return { columnName, analysis, hybridText };
   });
 
-  // Gemini で一括埋め込み生成
-  const embeddings = await geminiClient.generateBatchEmbeddings(hybridTexts.map(h => h.hybridText));
+  // OpenRouter で一括埋め込み生成
+  const embeddings = await openRouterClient.generateBatchEmbeddings(hybridTexts.map(h => h.hybridText));
 
   // 結果をまとめる
   for (let i = 0; i < columns.length; i++) {
@@ -139,10 +139,10 @@ async function handleColumnBatchProcessing(columns: any[]) {
     success: true,
     results,
     count: results.length,
-    dimensions: embeddings[0]?.length || 768,
+    dimensions: embeddings[0]?.length || 1536,
     processingTimeMs: processingTime,
     avgTimePerColumn: processingTime / columns.length,
-    provider: 'gemini',
+    provider: 'openrouter',
     processingType: 'column-based'
   });
 }
@@ -178,8 +178,8 @@ async function handleKPIGroupBatchProcessing(kpiGroups: KPIGroupData[]) {
     };
   });
 
-  // Gemini で一括埋め込み生成
-  const embeddings = await geminiClient.generateBatchEmbeddings(embeddingTexts.map(et => et.enhancedText));
+  // OpenRouter で一括埋め込み生成
+  const embeddings = await openRouterClient.generateBatchEmbeddings(embeddingTexts.map(et => et.enhancedText));
 
   // 結果をまとめる
   for (let i = 0; i < kpiGroups.length; i++) {
@@ -206,10 +206,10 @@ async function handleKPIGroupBatchProcessing(kpiGroups: KPIGroupData[]) {
     success: true,
     results,
     count: results.length,
-    dimensions: embeddings[0]?.length || 768,
+    dimensions: embeddings[0]?.length || 1536,
     processingTimeMs: processingTime,
     avgTimePerKPI: processingTime / kpiGroups.length,
-    provider: 'gemini',
+    provider: 'openrouter',
     processingType: 'kpi-group-based'
   });
 }

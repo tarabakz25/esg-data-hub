@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GeminiEmbeddingClient } from '@/lib/gemini-client';
+import { OpenRouterEmbeddingClient } from '@/lib/openrouter-client';
 import { prisma, VectorUtils } from '@/lib/prisma';
 
-const geminiClient = new GeminiEmbeddingClient();
+const openRouterClient = new OpenRouterEmbeddingClient();
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
 
     const startTime = Date.now();
 
-    // Gemini APIで埋め込み生成
-    const embeddings = await geminiClient.generateBatchEmbeddings(columnNames);
+    // OpenRouter APIで埋め込み生成
+    const embeddings = await openRouterClient.generateBatchEmbeddings(columnNames);
 
     const processingTime = Date.now() - startTime;
 
@@ -41,18 +41,18 @@ export async function POST(request: NextRequest) {
       embeddings,
       columnNames,
       count: embeddings.length,
-      dimensions: embeddings[0]?.length || 768, // Geminiは768次元
+      dimensions: embeddings[0]?.length || 1536, // OpenAI ada-002は1536次元
       processingTimeMs: processingTime,
-      provider: 'gemini', // プロバイダー識別用
+      provider: 'openrouter', // プロバイダー識別用
     });
 
   } catch (error) {
     console.error('Embedding generation failed:', error);
     
-    // Gemini API エラーの場合は詳細を返す
-    if (error instanceof Error && error.message.includes('Gemini')) {
+    // OpenRouter API エラーの場合は詳細を返す
+    if (error instanceof Error && error.message.includes('OpenRouter')) {
       return NextResponse.json(
-        { error: 'Gemini API error', details: error.message },
+        { error: 'OpenRouter API error', details: error.message },
         { status: 503 }
       );
     }

@@ -1,42 +1,64 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+/**
+ * OpenRouter Embedding Client
+ * GeminiからOpenRouterに移行したファイル
+ */
+import { OpenAI } from 'openai';
 
-export class GeminiEmbeddingClient {
-  private genAI: GoogleGenerativeAI;
-  private model: any;
+export class OpenRouterEmbeddingClient {
+  private client: OpenAI;
+  private model: string;
   
   constructor() {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY environment variable is required');
+    if (!process.env.OPENROUTER_API_KEY) {
+      throw new Error('OPENROUTER_API_KEY environment variable is required');
     }
     
-    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // text-embedding-004は最新のembeddingモデル（768次元）
-    this.model = this.genAI.getGenerativeModel({ model: "text-embedding-004" });
+    this.client = new OpenAI({
+      baseURL: 'https://openrouter.ai/api/v1',
+      apiKey: process.env.OPENROUTER_API_KEY,
+    });
+    // text-embedding-ada-002 互換の埋め込みモデルを使用
+    this.model = "openai/text-embedding-ada-002";
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
     try {
-      const result = await this.model.embedContent(text);
-      const embedding = result.embedding;
+      const response = await this.client.embeddings.create({
+        model: this.model,
+        input: text,
+      });
       
-      if (!embedding || !embedding.values) {
-        throw new Error('Invalid embedding response from Gemini');
+      if (!response.data || response.data.length === 0) {
+        throw new Error('Invalid embedding response from OpenRouter');
       }
       
-      return embedding.values;
+      return response.data[0].embedding;
     } catch (error) {
-      console.error('Gemini embedding generation failed:', error);
+      console.error('OpenRouter embedding generation failed:', error);
       throw new Error(`Failed to generate embedding: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   async generateBatchEmbeddings(texts: string[]): Promise<number[][]> {
-    // Gemini APIはバッチ処理をサポートしていないため、順次処理
+    // OpenRouter APIでバッチ処理をサポート
     // レート制限を考慮してリトライ機能付きで実装
-    const promises = texts.map(text => 
-      this.retryWithBackoff(() => this.generateEmbedding(text))
-    );
-    return Promise.all(promises);
+    try {
+      const response = await this.retryWithBackoff(() => 
+        this.client.embeddings.create({
+          model: this.model,
+          input: texts,
+        })
+      );
+      
+      return response.data.map(item => item.embedding);
+    } catch (error) {
+      // バッチ処理が失敗した場合は個別処理にフォールバック
+      console.warn('Batch embedding failed, falling back to individual requests:', error);
+      const promises = texts.map(text => 
+        this.retryWithBackoff(() => this.generateEmbedding(text))
+      );
+      return Promise.all(promises);
+    }
   }
 
   private async retryWithBackoff<T>(
@@ -52,10 +74,10 @@ export class GeminiEmbeddingClient {
         
         // レート制限エラーの場合はより長く待機
         const isRateLimit = error instanceof Error && 
-          (error.message.includes('quota') || error.message.includes('rate'));
+          (error.message.includes('quota') || error.message.includes('rate') || error.message.includes('429'));
         const delay = isRateLimit ? baseDelay * Math.pow(3, i) : baseDelay * Math.pow(2, i);
         
-        console.warn(`Gemini API retry ${i + 1}/${maxRetries} after ${delay}ms. Error:`, error);
+        console.warn(`OpenRouter API retry ${i + 1}/${maxRetries} after ${delay}ms. Error:`, error);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -73,10 +95,10 @@ export class GeminiEmbeddingClient {
 
 /**
  * テスト用のモックEmbeddingClient
- * Gemini APIの代わりに文字列マッチングベースの類似度を計算
+ * OpenRouter APIの代わりに文字列マッチングベースの類似度を計算
  */
 export class MockEmbeddingClient {
-  private readonly EMBEDDING_SIZE = 768; // Geminiと同じ768次元
+  private readonly EMBEDDING_SIZE = 1536; // OpenAI text-embedding-ada-002と同じ1536次元
 
   /**
    * KPIキーワードマッピング
@@ -124,7 +146,7 @@ export class MockEmbeddingClient {
     const maxScore = Math.max(...kpiScores.map(s => s.score));
     const bestMatch = kpiScores.find(s => s.score === maxScore);
 
-    // エンベディングベクトルを生成（768次元）
+    // エンベディングベクトルを生成（1536次元）
     const embedding = new Array(this.EMBEDDING_SIZE).fill(0);
     
     if (bestMatch && bestMatch.score > 0) {
@@ -132,9 +154,10 @@ export class MockEmbeddingClient {
       const kpiIndex = Object.keys(this.KPI_KEYWORDS).indexOf(bestMatch.kpiId);
       const baseValue = 0.8 + (bestMatch.score * 0.2); // 0.8-1.0の範囲
       
-      // 特定の次元に高い値を設定（768次元に対応）
-      for (let i = 0; i < 50; i++) {
-        embedding[kpiIndex * 50 + i] = baseValue + (Math.random() * 0.1 - 0.05);
+      // 特定の次元に高い値を設定（1536次元に対応）
+      const segmentSize = Math.floor(this.EMBEDDING_SIZE / Object.keys(this.KPI_KEYWORDS).length);
+      for (let i = 0; i < segmentSize; i++) {
+        embedding[kpiIndex * segmentSize + i] = baseValue + (Math.random() * 0.1 - 0.05);
       }
       
       // その他の次元にノイズを追加

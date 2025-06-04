@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CSVAnalyzer, type KPIGroupData, type CSVAnalysisResult } from '@/lib/csv-analyzer';
-import { GeminiEmbeddingClient } from '@/lib/gemini-client';
+import { OpenRouterEmbeddingClient } from '@/lib/openrouter-client';
 import { KPIEmbeddingManager } from '@/lib/kpi-embedding-manager';
 
-const geminiClient = new GeminiEmbeddingClient();
+const openRouterClient = new OpenRouterEmbeddingClient();
 
 interface CSVMappingRequest {
   csvData: any[];

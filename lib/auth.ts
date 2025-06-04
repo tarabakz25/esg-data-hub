@@ -20,7 +20,7 @@ interface ExtendedSession extends Session {
   }
 }
 
-const authConfig: AuthOptions = {
+export const authConfig: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [  
     CredentialsProvider({
@@ -99,14 +99,27 @@ const authConfig: AuthOptions = {
     },
   },
   pages: {
-    signIn: "/auth/signin",
+    signIn: "/signin",
   },
   session: {
     strategy: "jwt" as const,
   },
+  secret: process.env.NEXTAUTH_SECRET,
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
+// NextAuth v4用
+const nextAuthHandler = NextAuth(authConfig)
+
+// ハンドラーを手動で作成
+export const handlers = {
+  GET: nextAuthHandler,
+  POST: nextAuthHandler,
+}
+
+// NextAuth v4用のメソッド
+export const auth = () => nextAuthHandler
+export const signIn = () => nextAuthHandler  
+export const signOut = () => nextAuthHandler
 
 // JWT utility functions
 export function signJWT(payload: string | object | Buffer, expiresIn: string = "1h"): string {

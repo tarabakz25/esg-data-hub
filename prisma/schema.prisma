@@ -36,7 +36,7 @@ model KPI {
   code String @unique
   displayName String
   baseUnit String
-  embedding Unsupported("vector(1536)") // ベクトル検索用の埋め込み
+  embedding Unsupported("vector(1536)") // OpenAI ada-002用の埋め込み（1536次元）
 }
 
 // データレコードとKPIのマッピングルールを管理するモデル

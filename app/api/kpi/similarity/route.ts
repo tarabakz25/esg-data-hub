@@ -31,15 +31,15 @@ export async function POST(request: NextRequest) {
       mapping,
       processingTimeMs: processingTime,
       dictionaryStats: kpiManager.getDictionaryStats(),
-      provider: 'gemini', // プロバイダー識別用
+      provider: 'openrouter', // プロバイダー識別用
     });
 
   } catch (error) {
     console.error('KPI similarity search failed:', error);
     
-    if (error instanceof Error && error.message.includes('Gemini')) {
+    if (error instanceof Error && error.message.includes('OpenRouter')) {
       return NextResponse.json(
-        { error: 'Gemini API error', details: error.message },
+        { error: 'OpenRouter API error', details: error.message },
         { status: 503 }
       );
     }
