@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAutoConverter } from '../../hooks/useAutoConverter';
-import { AutoConversionRequest, AutoConversionResult, KpiUnitConfig } from '../../../../../packages/shared/src/types/kpi';
+import { useAutoConverter } from '@/app/hooks/useAutoConverter';
+import { AutoConversionRequest, AutoConversionResult, KpiUnitConfig } from '@/types/services/kpi';
 
 interface ConversionFormProps {
   onConversionResult: (result: AutoConversionResult) => void;

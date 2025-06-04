@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ComplianceCheckResult, ComplianceStandard } from '@/lib/services/compliance'
+import { ComplianceCheckResult, ComplianceStandard } from '@/types/services/compliance'
 
 interface ComplianceFormData {
   period: string

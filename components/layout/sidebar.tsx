@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cn } from "@/app/lib/utils";
+import { cn } from "@/lib/utils";
 import { 
   BarChart3, 
   Settings,
@@ -7,7 +7,7 @@ import {
   Activity,
   LogOut
 } from "lucide-react";
-import { navigation } from "@/app/lib/navigation";
+import { navigation } from "@/lib/navigation";
 
 interface SidebarProps {
   className?: string;

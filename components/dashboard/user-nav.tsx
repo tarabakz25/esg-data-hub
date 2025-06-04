@@ -65,7 +65,7 @@ export function UserNav() {
               {session.user.email}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
-              {getRoleBadge(session.user.role)} | {session.user.department}
+              {getRoleBadge((session.user as any)?.role || "viewer")} | {(session.user as any)?.department || "未設定"}
             </p>
           </div>
         </DropdownMenuLabel>

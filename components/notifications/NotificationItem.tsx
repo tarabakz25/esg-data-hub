@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { AlertCircle, AlertTriangle, Info, ExternalLink, Clock } from 'lucide-react';
-import type { NotificationItem as NotificationItemType } from '@/lib/services/notification';
+import type { NotificationItem as NotificationItemType } from '@/types/services/notification';
 
 interface NotificationItemProps {
   notification: NotificationItemType;

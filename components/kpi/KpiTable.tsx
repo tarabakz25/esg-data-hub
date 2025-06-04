@@ -1,5 +1,5 @@
 "use client";
-import { useKpis } from "@/hooks/useKpis";
+import { useKpis } from "@/app/hooks/useKpis";
 
 export default function KpiTable() {
     const { data, isLoading, error } = useKpis();

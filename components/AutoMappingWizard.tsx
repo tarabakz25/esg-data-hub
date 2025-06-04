@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { useCSVAnalysis } from '@/hooks/use-csv-analysis';
-import { useBatchKPIMapping } from '@/hooks/use-kpi-similarity';
+import { useCSVAnalysis } from '@/app/hooks/useCSVAnalysis';
+import { useBatchKPIMapping } from '@/app/hooks/useKpiSimilarity';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';

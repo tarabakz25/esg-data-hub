@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
-import { useNotificationStats } from '../../hooks/useNotifications';
+import { useNotificationStats } from '@/app/hooks/useNotifications';
 import { NotificationPanel } from './NotificationPanel';
 
 interface NotificationBellProps {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ComplianceCheckResult } from '@/lib/services/compliance'
+import { ComplianceCheckResult } from '@/types/services/compliance'
 
 export default function ComplianceHistory() {
   const [history, setHistory] = useState<ComplianceCheckResult[]>([])

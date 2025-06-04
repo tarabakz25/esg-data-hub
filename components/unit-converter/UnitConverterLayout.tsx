@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ConversionForm } from './ConversionForm';
 import { ConversionResult } from './ConversionResult';
 import { ConversionHistory } from './ConversionHistory';
-import { AutoConversionResult } from '../../../../../packages/shared/src/types/kpi';
+import { AutoConversionResult } from '@/types/services/kpi';
 
 export const UnitConverterLayout: React.FC = () => {
   const [currentResult, setCurrentResult] = useState<AutoConversionResult | null>(null);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAutoConverter } from '../../hooks/useAutoConverter';
-import { ConversionLog } from '../../../../../packages/shared/src/types/kpi';
+import { useAutoConverter } from '@/app/hooks/useAutoConverter';
+import { ConversionLog } from '@/types/services/kpi';
 
 export const ConversionHistory: React.FC = () => {
   const [logs, setLogs] = useState<ConversionLog[]>([]);

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import CategoryProgress from './CategoryProgress';
-import { type ComplianceCheckResult } from '@/lib/compliance-checker';
+import { type ComplianceCheckResult } from '@/types/services/compliance';
 
 export interface ComplianceDashboardProps {
   overallScore: number;
@@ -46,7 +46,7 @@ export default function ComplianceReport({
     );
   }
 
-  // 総合スコアに基づく色とメッセージ
+  // 総合スコアに基づく色とメッセージ（コンプライアンス率を使用）
   const getOverallScoreColor = (score: number): string => {
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-yellow-600';
@@ -59,33 +59,55 @@ export default function ComplianceReport({
     return '⚠️';
   };
 
-  // カテゴリ別のKPI分類
-  const getCategoryKPIs = () => {
+  // ステータスに基づくメッセージ
+  const getStatusMessage = (status: string): string => {
+    switch (status) {
+      case 'compliant':
+        return 'コンプライアンス基準を満たしています';
+      case 'warning':
+        return '一部の基準で警告があります';
+      case 'critical':
+        return '重要な基準で問題があります';
+      default:
+        return '未確認';
+    }
+  };
+
+  // カテゴリ別のKPI分類（実際のデータから推定）
+  const getCategoryKpis = () => {
     const categories = {
-      Environment: { required: [] as string[], mapped: [] as string[], missing: [] as string[] },
-      Social: { required: [] as string[], mapped: [] as string[], missing: [] as string[] },
-      Governance: { required: [] as string[], mapped: [] as string[], missing: [] as string[] }
+      environment: { required: [] as string[], mapped: [] as string[], missing: [] as string[] },
+      social: { required: [] as string[], mapped: [] as string[], missing: [] as string[] },
+      governance: { required: [] as string[], mapped: [] as string[], missing: [] as string[] }
     };
 
     // 欠損KPIの分類
-    complianceResult.missingKPIs.forEach(missing => {
+    complianceResult.missingKpis.forEach(missing => {
       const category = missing.category as keyof typeof categories;
       if (categories[category]) {
-        categories[category].missing.push(missing.requiredKPI);
+        categories[category].missing.push(missing.kpiId);
       }
     });
-
-    // TODO: マッピング済みKPIの情報が必要（現在の実装では取得方法がない）
-    // この部分は実際のマッピング結果データから取得する必要がある
 
     return categories;
   };
 
-  const categoryKPIs = getCategoryKPIs();
+  const categoryKpis = getCategoryKpis();
 
-  // データ品質問題の分類
-  const criticalIssues = complianceResult.dataQualityIssues.filter(issue => issue.severity === 'error');
-  const warningIssues = complianceResult.dataQualityIssues.filter(issue => issue.severity === 'warning');
+  // カテゴリ別スコア計算（欠損KPIの数に基づく）
+  const calculateCategoryScores = () => {
+    const scores: Record<string, number> = {};
+    const totalKpisPerCategory = 10; // 仮の値、実際は設定から取得
+
+    Object.keys(categoryKpis).forEach(category => {
+      const missingCount = categoryKpis[category as keyof typeof categoryKpis].missing.length;
+      scores[category] = Math.max(0, ((totalKpisPerCategory - missingCount) / totalKpisPerCategory) * 100);
+    });
+
+    return scores;
+  };
+
+  const categoryScores = calculateCategoryScores();
 
   return (
     <div className="space-y-6">
@@ -108,12 +130,13 @@ export default function ComplianceReport({
 
         {/* 総合スコア */}
         <div className="flex items-center space-x-4 mb-6">
-          <span className="text-4xl">{getOverallScoreIcon(complianceResult.overallScore)}</span>
+          <span className="text-4xl">{getOverallScoreIcon(complianceResult.complianceRate)}</span>
           <div>
-            <div className={`text-4xl font-bold ${getOverallScoreColor(complianceResult.overallScore)}`}>
-              {complianceResult.overallScore.toFixed(1)}%
+            <div className={`text-4xl font-bold ${getOverallScoreColor(complianceResult.complianceRate)}`}>
+              {complianceResult.complianceRate.toFixed(1)}%
             </div>
             <div className="text-lg text-gray-600">総合コンプライアンススコア</div>
+            <div className="text-sm text-gray-500">{getStatusMessage(complianceResult.status)}</div>
           </div>
         </div>
 
@@ -121,27 +144,27 @@ export default function ComplianceReport({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-green-600">
-              {complianceResult.mappingQuality.highConfidence}
+              {complianceResult.totalKpis - complianceResult.missingKpis.length}
             </div>
-            <div className="text-sm text-gray-600">高信頼度マッピング</div>
+            <div className="text-sm text-gray-600">マッピング済みKPI</div>
           </div>
           <div className="bg-white rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-yellow-600">
-              {complianceResult.mappingQuality.mediumConfidence}
+              {complianceResult.warningMissing}
             </div>
-            <div className="text-sm text-gray-600">中信頼度マッピング</div>
+            <div className="text-sm text-gray-600">警告レベル欠損</div>
           </div>
           <div className="bg-white rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-red-600">
-              {complianceResult.missingKPIs.length}
+              {complianceResult.criticalMissing}
             </div>
-            <div className="text-sm text-gray-600">欠損KPI</div>
+            <div className="text-sm text-gray-600">重要欠損KPI</div>
           </div>
           <div className="bg-white rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-purple-600">
-              {complianceResult.dataQualityIssues.length}
+              {complianceResult.totalKpis}
             </div>
-            <div className="text-sm text-gray-600">品質問題</div>
+            <div className="text-sm text-gray-600">総KPI数</div>
           </div>
         </div>
       </div>
@@ -150,9 +173,8 @@ export default function ComplianceReport({
       <div>
         <h3 className="text-xl font-bold text-gray-900 mb-4">カテゴリ別進捗</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {Object.entries(complianceResult.categoryScores).map(([category, score]) => {
-            if (category === 'Financial') return null; // Financialは除外
-            const categoryData = categoryKPIs[category as keyof typeof categoryKPIs];
+          {Object.entries(categoryScores).map(([category, score]) => {
+            const categoryData = categoryKpis[category as keyof typeof categoryKpis];
             return (
               <CategoryProgress
                 key={category}
@@ -194,7 +216,7 @@ export default function ComplianceReport({
             )}
           </div>
 
-          {/* 次のステップと問題一覧 */}
+          {/* 次のステップと欠損KPI一覧 */}
           <div className="space-y-4">
             {detailedReport.nextSteps.length > 0 && (
               <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -210,42 +232,47 @@ export default function ComplianceReport({
               </div>
             )}
 
-            {complianceResult.dataQualityIssues.length > 0 && (
+            {complianceResult.missingKpis.length > 0 && (
               <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h4 className="text-lg font-semibold text-gray-900 mb-3">データ品質問題</h4>
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">欠損KPI</h4>
                 <div className="space-y-3">
-                  {criticalIssues.length > 0 && (
+                  {complianceResult.criticalMissing > 0 && (
                     <div>
                       <h5 className="text-sm font-medium text-red-700 mb-2">
-                        ❌ エラー ({criticalIssues.length}件)
+                        ❌ 重要 ({complianceResult.criticalMissing}件)
                       </h5>
                       <div className="space-y-1">
-                        {criticalIssues.map((issue, index) => (
+                        {complianceResult.missingKpis
+                          .filter(kpi => kpi.severity === 'critical')
+                          .map((kpi, index) => (
                           <div key={index} className="text-sm bg-red-50 rounded p-2">
-                            <div className="font-medium text-red-800">{issue.kpiIdentifier}</div>
-                            <div className="text-red-700">{issue.issue}</div>
-                            <div className="text-red-600 text-xs mt-1">{issue.recommendation}</div>
+                            <div className="font-medium text-red-800">{kpi.kpiName}</div>
+                            <div className="text-red-700">KPI ID: {kpi.kpiId}</div>
+                            <div className="text-red-600 text-xs mt-1">カテゴリ: {kpi.category}</div>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {warningIssues.length > 0 && (
+                  {complianceResult.warningMissing > 0 && (
                     <div>
                       <h5 className="text-sm font-medium text-yellow-700 mb-2">
-                        ⚠️ 警告 ({warningIssues.length}件)
+                        ⚠️ 警告 ({complianceResult.warningMissing}件)
                       </h5>
                       <div className="space-y-1">
-                        {warningIssues.slice(0, 3).map((issue, index) => (
+                        {complianceResult.missingKpis
+                          .filter(kpi => kpi.severity === 'warning')
+                          .slice(0, 3)
+                          .map((kpi, index) => (
                           <div key={index} className="text-sm bg-yellow-50 rounded p-2">
-                            <div className="font-medium text-yellow-800">{issue.kpiIdentifier}</div>
-                            <div className="text-yellow-700">{issue.issue}</div>
+                            <div className="font-medium text-yellow-800">{kpi.kpiName}</div>
+                            <div className="text-yellow-700">KPI ID: {kpi.kpiId}</div>
                           </div>
                         ))}
-                        {warningIssues.length > 3 && (
+                        {complianceResult.missingKpis.filter(kpi => kpi.severity === 'warning').length > 3 && (
                           <div className="text-xs text-gray-500">
-                            ...他 {warningIssues.length - 3}件の警告があります
+                            ...他 {complianceResult.missingKpis.filter(kpi => kpi.severity === 'warning').length - 3}件の警告があります
                           </div>
                         )}
                       </div>
@@ -258,9 +285,9 @@ export default function ComplianceReport({
         </div>
       )}
 
-      {/* 処理時間情報 */}
+      {/* 期間と基準情報 */}
       <div className="text-center text-sm text-gray-500">
-        処理時間: {complianceResult.processingTimeMs}ms
+        期間: {complianceResult.period} | 基準: {complianceResult.standard.toUpperCase()}
       </div>
     </div>
   );

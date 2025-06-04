@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useKpiSimilarity, useKpiStats } from '@/hooks/use-kpi-similarity';
+import { useKpiSimilarity, useKpiStats } from '@/app/hooks/useKpiSimilarity';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 

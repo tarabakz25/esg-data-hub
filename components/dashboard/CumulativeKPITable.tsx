@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { useCumulativeKPIs } from '../../hooks/useOptimizedQuery';
+import { useCumulativeKPIs } from '@/app/hooks/useOptimizedQuery';
 import { SimpleErrorBoundary } from '../ui/error-boundary';
 
 interface CumulativeKPI {

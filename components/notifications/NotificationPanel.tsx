@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { X, Settings, RotateCcw, AlertCircle, AlertTriangle, Info } from 'lucide-react';
-import { useUnreadNotifications } from '../../hooks/useNotifications';
+import { useUnreadNotifications } from '@/app/hooks/useNotifications';
 import { NotificationItem } from './NotificationItem';
-import type { NotificationStats } from '@/lib/services/notification';
+import type { NotificationStats } from '@/types/services/notification';
 
 interface NotificationPanelProps {
   onClose: () => void;

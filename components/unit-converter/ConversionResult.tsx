@@ -1,5 +1,5 @@
 import React from 'react';
-import { AutoConversionResult } from '../../../../../packages/shared/src/types/kpi';
+import { AutoConversionResult } from '@/types/services/kpi';
 
 interface ConversionResultProps {
   result: AutoConversionResult | null;
