@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { AutoConversionRequest, AutoConversionResult, ConversionLog, KpiUnitConfig } from '../../../../packages/shared/src/types/kpi';
+import { AutoConversionRequest, AutoConversionResult, ConversionLog, KpiUnitConfig } from '@/types/services/kpi';
 
 interface UseAutoConverterReturn {
   // 状態

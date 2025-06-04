@@ -7,7 +7,7 @@ import type {
   NotificationFilter, 
   NotificationStats,
   NotificationItem 
-} from '../../../../packages/shared/src/types/notification';
+} from '@/types/services/notification';
 
 const API_BASE = '/api';
 

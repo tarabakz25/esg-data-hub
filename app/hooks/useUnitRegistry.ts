@@ -5,7 +5,7 @@ import {
   ConversionResult, 
   UnitCompatibilityCheck,
   UnitCategoryType 
-} from '@/lib/services/unit';
+} from '@/types/services/unit';
 
 interface UnitRegistryStats {
   totalUnits: number;
