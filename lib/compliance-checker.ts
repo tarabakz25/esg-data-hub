@@ -1,5 +1,3 @@
-import { type KPIGroupData } from '@/lib/csv-analyzer';
-import { type KPIDictionary } from '@/lib/kpi-dictionary';
 
 export interface ComplianceCheckResult {
   overallScore: number; // 0-100%

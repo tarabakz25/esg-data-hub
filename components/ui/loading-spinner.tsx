@@ -57,12 +57,14 @@ export const PageLoading = memo(() => (
     <LoadingSpinner size="xl" message="ページを読み込み中..." />
   </div>
 ));
+PageLoading.displayName = 'PageLoading';
 
 export const TableLoading = memo(() => (
   <div className="flex items-center justify-center py-12">
     <LoadingSpinner size="lg" message="データを読み込み中..." />
   </div>
 ));
+TableLoading.displayName = 'TableLoading';
 
 export const InlineLoading = memo<{ message?: string }>(({ message = "読み込み中..." }) => (
   <div className="flex items-center space-x-2 py-2">
@@ -70,6 +72,7 @@ export const InlineLoading = memo<{ message?: string }>(({ message = "読み込�
     <span className="text-sm text-gray-600">{message}</span>
   </div>
 ));
+InlineLoading.displayName = 'InlineLoading';
 
 export const ButtonLoading = memo<{ message?: string }>(({ message = "処理中..." }) => (
   <div className="flex items-center space-x-2">
@@ -77,5 +80,6 @@ export const ButtonLoading = memo<{ message?: string }>(({ message = "処理中.
     <span>{message}</span>
   </div>
 ));
+ButtonLoading.displayName = 'ButtonLoading';
 
 export default LoadingSpinner; 
