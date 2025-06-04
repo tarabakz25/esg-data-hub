@@ -1,7 +1,7 @@
 import { UnitRegistry } from './unit-registry';
 import { STANDARD_UNITS, STANDARD_CATEGORIES, STANDARD_CONVERSION_RULES } from './unit-data';
 import { getKpiUnitConfig } from './kpi-unit-config';
-import { AutoConversionRequest, AutoConversionResult, ConversionLog } from '../types/kpi';
+import { AutoConversionRequest, AutoConversionResult, ConversionLog } from '../../../types/services/kpi';
 
 export class AutoConverter {
   private unitRegistry: UnitRegistry;

@@ -5,7 +5,7 @@ import {
   MissingKpi, 
   ComplianceStandard,
   ComplianceSeverity 
-} from '../types/compliance';
+} from '../../../types/services/compliance';
 import { 
   getMandatoryKpis, 
   getKpiSeverity, 

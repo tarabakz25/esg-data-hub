@@ -1,5 +1,5 @@
-import { KpiUnitConfig } from '../types/kpi';
-import { UNIT_CATEGORIES } from '../types/unit';
+import { KpiUnitConfig } from '../../../types/services/kpi';
+import { UNIT_CATEGORIES } from '../../../types/services/unit';
 
 /**
  * KPIごとの標準単位設定

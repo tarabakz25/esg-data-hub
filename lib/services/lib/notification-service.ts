@@ -4,8 +4,8 @@ import {
   type NotificationItem,
   type NotificationType,
   type NotificationPriority 
-} from '../types/notification';
-import { type ComplianceCheckResult, type ComplianceSeverity } from '../types/compliance';
+} from '../../../types/services/notification';
+import { type ComplianceCheckResult, type ComplianceSeverity } from '../../../types/services/compliance';
 
 // Prismaクライアントの初期化
 const prisma = new PrismaClient();

@@ -1,6 +1,6 @@
 import { PrismaClient } from '../../../../generated/prisma';
 import { KPIComplianceChecker } from './kpi-compliance-checker';
-import { ComplianceCheckOptions } from '../types/compliance';
+import { ComplianceCheckOptions } from '../../../types/services/compliance';
 
 // 実際のDBを使った統合テスト
 describe('KPI Compliance Checker Integration', () => {

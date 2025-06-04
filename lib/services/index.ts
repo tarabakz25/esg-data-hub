@@ -9,7 +9,7 @@ export { AutoConverter } from './lib/auto-converter';
 export { UnitRegistry } from './lib/unit-registry';
 
 // Types
-export * from './types/compliance';
-export * from './types/notification';
-export * from './types/kpi';
-export * from './types/unit'; 
+export * from '../../types/services/compliance';
+export * from '../../types/services/notification';
+export * from '../../types/services/kpi';
+export * from '../../types/services/unit'; 

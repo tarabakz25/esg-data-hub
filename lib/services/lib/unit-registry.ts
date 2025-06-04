@@ -5,7 +5,7 @@ import {
   ConversionResult, 
   UnitCompatibilityCheck,
   UnitCategoryType 
-} from '../types/unit';
+} from '../../../types/services/unit';
 
 export class UnitRegistry {
   private units: Map<string, Unit> = new Map();

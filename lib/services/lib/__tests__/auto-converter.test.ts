@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { AutoConverter } from '../auto-converter';
-import { AutoConversionRequest } from '../../types/kpi';
+import { AutoConversionRequest } from '../../../../types/services/kpi';
 
 describe('AutoConverter', () => {
   let autoConverter: AutoConverter;

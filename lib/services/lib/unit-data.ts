@@ -1,4 +1,4 @@
-import { Unit, UnitCategory, ConversionRule, UNIT_CATEGORIES, AutoConversionRule } from '../types/unit';
+import { Unit, UnitCategory, ConversionRule, UNIT_CATEGORIES, AutoConversionRule } from '../../../types/services/unit';
 
 // 単位分類定義
 export const STANDARD_CATEGORIES: UnitCategory[] = [

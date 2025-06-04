@@ -1,5 +1,5 @@
 import { KPIComplianceChecker } from './kpi-compliance-checker';
-import { ComplianceCheckOptions } from '../types/compliance';
+import { ComplianceCheckOptions } from '../../../types/services/compliance';
 
 // モックデータ
 const mockKpiValues = [

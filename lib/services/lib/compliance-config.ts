@@ -1,4 +1,4 @@
-import { ComplianceStandard, ComplianceSeverity, MandatoryKpiConfig } from '../types/compliance';
+import { ComplianceStandard, ComplianceSeverity, MandatoryKpiConfig } from '../../../types/services/compliance';
 
 /**
  * ISSB必須KPI設定
