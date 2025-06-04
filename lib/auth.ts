@@ -7,6 +7,19 @@ import { UserRole, ROLE_PERMISSIONS } from "@/types/auth"
 import type { JWT } from "next-auth/jwt"
 import type { Session, User } from "next-auth"
 
+// 拡張したセッション型を定義
+interface ExtendedSession extends Session {
+  user: {
+    id: string
+    name?: string | null
+    email?: string | null
+    image?: string | null
+    role: UserRole
+    department: string
+    permissions: any
+  }
+}
+
 const authConfig: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [  
@@ -73,14 +86,16 @@ const authConfig: AuthOptions = {
       }
       return token
     },
-    async session({ session, token }: { session: Session; token: JWT & { role?: UserRole; department?: string; permissions?: any } }) {
-      if (token) {
-        session.user.id = token.sub!
-        session.user.role = token.role as UserRole
-        session.user.department = token.department as string
-        session.user.permissions = token.permissions as any
+    async session({ session, token }: { session: Session; token: JWT & { role?: UserRole; department?: string; permissions?: any } }): Promise<ExtendedSession> {
+      if (token && session.user) {
+        const extendedSession = session as ExtendedSession
+        extendedSession.user.id = token.sub!
+        extendedSession.user.role = token.role as UserRole
+        extendedSession.user.department = token.department as string
+        extendedSession.user.permissions = token.permissions as any
+        return extendedSession
       }
-      return session
+      return session as ExtendedSession
     },
   },
   pages: {
@@ -94,9 +109,9 @@ const authConfig: AuthOptions = {
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
 
 // JWT utility functions
-export function signJWT(payload: string | object | Buffer, expiresIn: string = "1h") {
+export function signJWT(payload: string | object | Buffer, expiresIn: string = "1h"): string {
   const secret = process.env.NEXTAUTH_SECRET || "fallback-secret"
-  return jwt.sign(payload, secret, { expiresIn })
+  return jwt.sign(payload, secret, { expiresIn } as any)
 }
 
 export function verifyJWT(token: string) {
