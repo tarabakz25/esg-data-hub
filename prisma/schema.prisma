@@ -1,0 +1,320 @@
+generator client {
+  provider        = "prisma-client-js"
+  // output          = "../generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// データソースを管理するモデル
+// CSVファイル、API、ERPシステムなど、データの送信元を記録
+model DataSource {
+  id Int @id @default(autoincrement())
+  name String @unique
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+// 生のデータレコードを保存するモデル
+// 各データソースから取得した生データを保持
+model DataRecord {
+  id BigInt @id @default(autoincrement())
+  dataRecordId BigInt
+}
+
+// KPI（重要業績評価指標）を定義するモデル
+// ESG関連の指標（CO2排出量など）の定義と単位を管理
+model KPI {
+  id Int @id @default(autoincrement())
+  code String @unique
+  displayName String
+  baseUnit String
+  embedding Unsupported("vector(1536)") // ベクトル検索用の埋め込み
+}
+
+// データレコードとKPIのマッピングルールを管理するモデル
+// 生データを適切なKPIに紐付けるためのルールを保存
+model MappingRule {
+  id Int @id @default(autoincrement())
+  dataRecordId BigInt
+  kpiId Int
+  mappingRuleId BigInt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dataRecordId])
+  @@index([kpiId])
+}
+
+// 監査証跡を記録するモデル
+// データの変更履歴をブロックチェーン形式で保持
+model AuditTrail {
+  id BigInt @id @default(autoincrement())
+  tableName String
+  recordId BigInt
+  action String
+  payloadHash String
+  prevHash String?
+  userId String
+  ipAddress String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tableName, recordId])
+  @@index([createdAt])
+}
+
+// 正規化されたデータレコードを保存するモデル
+// 生データを適切なKPIに紐付けて正規化した結果を保持
+model NormalizedRecord {
+  id BigInt @id @default(autoincrement())
+  dataRecordId BigInt
+  kpiId Int
+  normalizedValue String
+  originalValue String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dataRecordId])
+  @@index([kpiId])
+  @@index([createdAt])
+}
+
+// ワークフロータスクを管理するモデル
+// データ承認フローの各ステップを定義
+model WorkflowTask {
+  id Int @id @default(autoincrement())
+  name String @unique
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+// KPI要件を管理するモデル
+// どのKPIが必須か、期日はいつかを定義
+model KPIRequirement {
+  id Int @id @default(autoincrement())
+  kpiId Int
+  regulation String // ISSB, CSRD, etc.
+  isRequired Boolean @default(true)
+  dueDate DateTime? // 提出期限
+  department String? // 担当部門
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([kpiId, regulation])
+  @@index([regulation, isRequired])
+}
+
+// アラートログを管理するモデル
+// KPI欠損や期日遅れの通知履歴を記録
+model AlertLog {
+  id BigInt @id @default(autoincrement())
+  alertType String // "missing_kpi", "due_date_approaching", "overdue"
+  kpiId Int?
+  regulation String?
+  department String?
+  message String
+  status String @default("sent") // "sent", "acknowledged", "resolved"
+  sentAt DateTime @default(now())
+  acknowledgedAt DateTime?
+  resolvedAt DateTime?
+  slackMessageTs String? // Slack message timestamp for threading
+
+  @@index([alertType, status])
+  @@index([sentAt])
+}
+
+model Kpi {
+  id        String     @id
+  name      String
+  unit      String
+  createdAt DateTime   @default(now())
+  data      Data[]
+  values    KPIValue[]
+}
+
+model Data {
+  id        Int           @id @default(autoincrement())
+  kpiId     String
+  period    DateTime
+  value     Float
+  sourceId  Int
+  createdAt DateTime      @default(now())
+  kpi       Kpi           @relation(fields: [kpiId], references: [id])
+  source    Source        @relation(fields: [sourceId], references: [id])
+  versions  DataVersion[]
+
+  @@unique([kpiId, period])
+}
+
+model DataVersion {
+  id        Int      @id @default(autoincrement())
+  dataId    Int
+  checksum  String
+  diff      Json
+  userId    Int
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now())
+  data      Data     @relation(fields: [dataId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+/// ------------  Ingest 用テーブル ------------
+model Source {
+  id         Int       @id @default(autoincrement())
+  uri        String    @unique
+  uploaderId Int
+  uploadedAt DateTime  @default(now())
+  data       Data[]
+  rows       DataRow[]
+  uploader   User      @relation(fields: [uploaderId], references: [id])
+  uploads    Upload[]
+}
+
+model Upload {
+  id        Int          @id @default(autoincrement())
+  filename  String
+  s3Key     String       @unique
+  status    UploadStatus @default(parsed)
+  userId    Int
+  createdAt DateTime     @default(now())
+  sourceId  Int?
+  rows      DataRow[]
+  source    Source?      @relation(fields: [sourceId], references: [id])
+  user      User         @relation(fields: [userId], references: [id])
+}
+
+model DataRow {
+  id        Int                    @id @default(autoincrement())
+  uploadId  Int
+  lineNo    Int
+  raw       Json
+  checksum  String
+  embedding Unsupported("vector")?
+  createdAt DateTime               @default(now())
+  sourceId  Int?
+  source    Source?                @relation(fields: [sourceId], references: [id])
+  upload    Upload                 @relation(fields: [uploadId], references: [id])
+  values    KPIValue[]
+}
+
+model KPIValue {
+  id        Int      @id @default(autoincrement())
+  kpiId     String
+  dataRowId Int
+  period    DateTime
+  value     Float
+  unit      String?
+  dataRow   DataRow  @relation(fields: [dataRowId], references: [id])
+  kpi       Kpi      @relation(fields: [kpiId], references: [id])
+
+  @@unique([kpiId, period, dataRowId])
+}
+
+/// ------------ コンプライアンスチェック用テーブル ------------
+model ComplianceCheckResult {
+  id              String           @id @default(cuid())
+  period          String
+  standard        String
+  checkedAt       DateTime         @default(now())
+  totalKpis       Int
+  criticalMissing Int
+  warningMissing  Int
+  complianceRate  Float
+  status          ComplianceStatus
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  missingKpis     MissingKpi[]
+  notifications   Notification[]
+
+  @@unique([period, standard])
+}
+
+model MissingKpi {
+  id                      Int                   @id @default(autoincrement())
+  complianceCheckResultId String
+  kpiId                   String
+  kpiName                 String
+  category                String
+  severity                ComplianceSeverity
+  expectedUnit            String
+  lastUpdated             DateTime?
+  createdAt               DateTime              @default(now())
+  complianceCheckResult   ComplianceCheckResult @relation(fields: [complianceCheckResultId], references: [id], onDelete: Cascade)
+
+  @@unique([complianceCheckResultId, kpiId])
+}
+
+/// ------------ 通知システム用テーブル ------------
+model Notification {
+  id                      String               @id @default(cuid())
+  type                    NotificationType
+  priority                NotificationPriority
+  title                   String
+  message                 String
+  severity                ComplianceSeverity?
+  isRead                  Boolean              @default(false)
+  actionUrl               String?
+  complianceCheckResultId String?
+  userId                  Int?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+
+  complianceCheckResult ComplianceCheckResult? @relation(fields: [complianceCheckResultId], references: [id], onDelete: Cascade)
+  user                  User?                  @relation(fields: [userId], references: [id])
+
+  @@index([isRead, createdAt])
+  @@index([userId, isRead])
+}
+
+/// ------------ ENUM ------------
+enum UploadStatus {
+  parsed
+  errored
+}
+
+enum ComplianceStatus {
+  compliant
+  warning
+  critical
+}
+
+enum ComplianceSeverity {
+  critical
+  warning
+}
+
+enum NotificationType {
+  compliance_missing
+  compliance_warning
+  system_alert
+}
+
+enum NotificationPriority {
+  high
+  medium
+  low
+}
+
+/// ------------  ユーザー関連 ------------
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  name          String
+  createdAt     DateTime       @default(now())
+  dataVersions  DataVersion[]
+  sources       Source[]
+  uploads       Upload[]
+  notifications Notification[]
+} 
