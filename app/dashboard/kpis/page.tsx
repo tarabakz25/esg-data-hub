@@ -1,23 +1,35 @@
 'use client'
 
 import KpiTable from '@/components/kpi/KpiTable'
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { PageHeader } from "@/components/layout/page-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartBarIcon } from '@heroicons/react/24/outline';
 
 export default function KpisPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">KPI Data</h1>
-        <p className="mt-2 text-gray-600">
-          アップロードされたKPIデータを確認・管理できます。
-        </p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <PageHeader
+          title="KPI Data"
+          description="アップロードされたKPIデータを確認・管理できます。"
+          esgCategory="social"
+        />
+        
+        {/* KPI Table */}
+        <Card className="card-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <ChartBarIcon className="h-5 w-5 text-secondary" />
+              <span>KPIデータ一覧</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <KpiTable />
+          </CardContent>
+        </Card>
       </div>
-      
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">
-          KPIデータ一覧
-        </h2>
-        <KpiTable />
-      </div>
-    </div>
+    </DashboardLayout>
   )
 } 

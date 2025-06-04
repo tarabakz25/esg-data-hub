@@ -21,22 +21,25 @@ export function TopBar() {
   };
 
   return (
-    <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow-lg border-b border-gray-100">
+    <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow-md border-b border-gray-200">
       <div className="flex-1 px-6 flex justify-between items-center">
         {/* Logo and Mobile Menu Button */}
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center lg:hidden">
+            <div className="h-8 w-8 rounded-lg esg-gradient flex items-center justify-center lg:hidden shadow-sm">
               <span className="text-sm font-bold text-white">E</span>
             </div>
-            <h1 className="text-lg font-bold text-gray-900 lg:hidden">ESG Hub</h1>
+            <div className="lg:hidden">
+              <h1 className="text-lg font-bold text-gray-900">ESG Hub</h1>
+              <p className="text-xs text-gray-500">Sustainability Analytics</p>
+            </div>
           </div>
           
           {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="sm"
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+            className="lg:hidden p-2 hover:bg-primary/10 rounded-lg transition-theme"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             <Menu className="h-5 w-5 text-gray-600" />
@@ -53,16 +56,19 @@ export function TopBar() {
                 key={item.name}
                 href={item.href}
                 className={`
-                  flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                  flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-theme relative
                   ${active 
-                    ? 'bg-emerald-100 text-emerald-700 shadow-sm' 
-                    : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-50'
+                    ? 'bg-primary/10 text-primary shadow-sm border border-primary/20' 
+                    : 'text-gray-600 hover:text-primary hover:bg-primary/5'
                   }
                 `}
                 title={item.description}
               >
                 <Icon className="h-4 w-4" />
                 <span>{item.name}</span>
+                {active && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full" />
+                )}
               </Link>
             );
           })}
@@ -74,13 +80,13 @@ export function TopBar() {
             <label htmlFor="search-field" className="sr-only">
               Search
             </label>
-            <div className="relative w-full text-gray-400 focus-within:text-emerald-600">
+            <div className="relative w-full text-gray-400 focus-within:text-primary">
               <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none pl-3">
                 <Search className="h-5 w-5" aria-hidden="true" />
               </div>
               <Input
                 id="search-field"
-                className="block w-full h-10 pl-10 pr-3 py-2 border-gray-200 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-gray-50"
+                className="block w-full h-10 pl-10 pr-3 py-2 border-border rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary bg-muted transition-theme"
                 placeholder="Search ESG data, reports, KPIs..."
                 type="search"
                 name="search"
@@ -92,20 +98,20 @@ export function TopBar() {
         {/* Right Section */}
         <div className="ml-4 flex items-center space-x-4">
           {/* Notifications */}
-          <Button variant="ghost" size="sm" className="relative p-2 hover:bg-gray-100 rounded-lg">
+          <Button variant="ghost" size="sm" className="relative p-2 hover:bg-primary/10 rounded-lg transition-theme">
             <span className="sr-only">View notifications</span>
             <Bell className="h-6 w-6 text-gray-600" aria-hidden="true" />
-            <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+            <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-error ring-2 ring-white animate-pulse"></span>
           </Button>
 
           {/* Profile Section */}
           <div className="flex items-center space-x-3">
             <div className="hidden md:block text-right">
               <p className="text-sm font-medium text-gray-900">John Doe</p>
-              <p className="text-xs text-gray-500">ESG Data Manager</p>
+              <p className="text-xs text-muted-foreground">ESG Data Manager</p>
             </div>
-            <Button variant="ghost" size="sm" className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center">
+            <Button variant="ghost" size="sm" className="flex items-center space-x-2 p-2 hover:bg-primary/10 rounded-lg transition-theme">
+              <div className="h-8 w-8 rounded-full esg-gradient flex items-center justify-center shadow-sm">
                 <span className="text-sm font-semibold text-white">JD</span>
               </div>
             </Button>
@@ -115,7 +121,7 @@ export function TopBar() {
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <div className="absolute top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg lg:hidden z-50">
+        <div className="absolute top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-xl lg:hidden z-50">
           <nav className="px-6 py-4">
             <div className="space-y-2">
               {navigation.map((item) => {
@@ -126,10 +132,10 @@ export function TopBar() {
                     key={item.name}
                     href={item.href}
                     className={`
-                      flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200
+                      flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-theme relative
                       ${active 
-                        ? 'bg-emerald-100 text-emerald-700 shadow-sm' 
-                        : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-50'
+                        ? 'bg-primary/10 text-primary shadow-sm border border-primary/20' 
+                        : 'text-gray-600 hover:text-primary hover:bg-primary/5'
                       }
                     `}
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -137,8 +143,11 @@ export function TopBar() {
                     <Icon className="h-5 w-5" />
                     <div>
                       <div>{item.name}</div>
-                      <div className="text-xs text-gray-500">{item.description}</div>
+                      <div className="text-xs text-muted-foreground">{item.description}</div>
                     </div>
+                    {active && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                    )}
                   </Link>
                 );
               })}

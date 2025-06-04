@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge, StatusBadge } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { KPICard } from "@/components/dashboard/kpi-card";
 import { AlertTriangle, CheckCircle, Clock, Target, Search, Plus } from "lucide-react";
 
 interface KPIRequirement {
@@ -151,8 +153,8 @@ export default function KPIRequirementsPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">読み込み中...</p>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">読み込み中...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -163,32 +165,24 @@ export default function KPIRequirementsPage() {
     <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
-              <AlertTriangle className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">KPI Requirements Management</h1>
-              <p className="text-gray-600">
-                ESG KPIの要件設定とアラート監視システム
-              </p>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="KPI Requirements Management"
+          description="ESG KPIの要件設定とアラート監視システム"
+          esgCategory="governance"
+        />
 
         {/* Action Buttons */}
         <div className="flex space-x-4">
           <Button 
             onClick={runManualCheck}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg"
+            className="primary-gradient text-white hover:opacity-90 shadow-lg"
           >
             <Search className="w-4 h-4 mr-2" />
             手動チェック実行
           </Button>
           <Button 
             onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg"
+            className="secondary-gradient text-white hover:opacity-90 shadow-lg"
           >
             <Plus className="w-4 h-4 mr-2" />
             {showForm ? 'キャンセル' : '新規KPI要件'}
@@ -197,59 +191,34 @@ export default function KPIRequirementsPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <Target className="h-8 w-8 text-blue-600" />
-                <div>
-                  <p className="text-sm font-medium text-blue-800">Total Requirements</p>
-                  <p className="text-2xl font-bold text-blue-900">{requirements.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-                <div>
-                  <p className="text-sm font-medium text-green-800">Required</p>
-                  <p className="text-2xl font-bold text-green-900">
-                    {requirements.filter(req => req.isRequired).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <AlertTriangle className="h-8 w-8 text-red-600" />
-                <div>
-                  <p className="text-sm font-medium text-red-800">Active Alerts</p>
-                  <p className="text-2xl font-bold text-red-900">
-                    {alerts.filter(alert => alert.status === 'sent').length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <Clock className="h-8 w-8 text-yellow-600" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-800">Pending</p>
-                  <p className="text-2xl font-bold text-yellow-900">
-                    {alerts.filter(alert => alert.status === 'pending').length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <KPICard
+            title="総KPI要件数"
+            value={requirements.length}
+            icon={Target}
+            status="good"
+            description="登録済み要件"
+          />
+          <KPICard
+            title="必須要件"
+            value={requirements.filter(r => r.isRequired).length}
+            icon={AlertTriangle}
+            status="warning"
+            description="必須項目"
+          />
+          <KPICard
+            title="アクティブアラート"
+            value={alerts.filter(a => a.status === 'pending').length}
+            icon={Clock}
+            status="error"
+            description="対応待ち"
+          />
+          <KPICard
+            title="期日管理"
+            value={requirements.filter(r => r.dueDate && new Date(r.dueDate) < new Date()).length}
+            icon={CheckCircle}
+            status="neutral"
+            description="期日超過"
+          />
         </div>
 
         {/* Form */}

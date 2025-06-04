@@ -1,23 +1,35 @@
 'use client'
 
 import UploadForm from '@/components/upload/UploadForm'
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { PageHeader } from "@/components/layout/page-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 
 export default function IngestPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">KPI Data Upload</h1>
-        <p className="mt-2 text-gray-600">
-          CSVファイルをアップロードしてKPIデータを管理システムに取り込みます。
-        </p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <PageHeader
+          title="KPI Data Upload"
+          description="CSVファイルをアップロードしてKPIデータを管理システムに取り込みます。"
+          esgCategory="environment"
+        />
+        
+        {/* Upload Form */}
+        <Card className="card-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <DocumentArrowUpIcon className="h-5 w-5 text-primary" />
+              <span>ファイルアップロード</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <UploadForm />
+          </CardContent>
+        </Card>
       </div>
-      
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">
-          ファイルアップロード
-        </h2>
-        <UploadForm />
-      </div>
-    </div>
+    </DashboardLayout>
   )
 } 

@@ -11,47 +11,47 @@ import { TrendingUp, AlertTriangle, CheckCircle, Clock, Target } from "lucide-re
 
 const complianceData = [
   {
-    kpi: "Carbon Emissions Reduction",
+    kpi: "炭素排出量削減",
     standard: "ISSB",
-    status: "Compliant",
+    status: "適合",
     dueDate: "2024-12-31",
-    assignedTo: "Emily Zhang",
+    assignedTo: "山田 花子",
     progress: 85,
     statusColor: "green"
   },
   {
-    kpi: "Water Usage Efficiency",
+    kpi: "水使用効率",
     standard: "CSRD",
-    status: "At Risk",
+    status: "リスクあり",
     dueDate: "2024-09-15",
-    assignedTo: "Michael Chen",
+    assignedTo: "佐藤 健太",
     progress: 65,
     statusColor: "yellow"
   },
   {
-    kpi: "Diversity & Inclusion Metrics",
+    kpi: "ダイバーシティ&インクルージョン指標",
     standard: "ISSB",
-    status: "Compliant",
+    status: "適合",
     dueDate: "2024-11-30",
-    assignedTo: "Sarah Johnson",
+    assignedTo: "田中 美咲",
     progress: 92,
     statusColor: "green"
   },
   {
-    kpi: "Supply Chain Transparency",
+    kpi: "サプライチェーン透明性",
     standard: "CSRD",
-    status: "Non-Compliant",
+    status: "非適合",
     dueDate: "2024-08-31",
-    assignedTo: "David Wilson",
+    assignedTo: "鈴木 大介",
     progress: 35,
     statusColor: "red"
   },
   {
-    kpi: "Energy Efficiency",
+    kpi: "エネルギー効率",
     standard: "ISSB",
-    status: "Compliant",
+    status: "適合",
     dueDate: "2024-10-15",
-    assignedTo: "Lisa Anderson",
+    assignedTo: "高橋 雅子",
     progress: 78,
     statusColor: "green"
   }
@@ -68,9 +68,9 @@ export default function KPICompliancePage() {
               <Target className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">KPI Compliance</h1>
+              <h1 className="text-3xl font-bold text-gray-900">KPIコンプライアンス</h1>
               <p className="text-gray-600">
-                Monitor ESG compliance across ISSB, CSRD, and other regulatory frameworks.
+                ISSB、CSRD、その他の規制フレームワークにおけるESGコンプライアンスを監視します。
               </p>
             </div>
           </div>
@@ -81,22 +81,22 @@ export default function KPICompliancePage() {
           <CardHeader className="border-b border-gray-200">
             <CardTitle className="text-xl text-gray-800 flex items-center">
               <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
-              Overall Compliance
+              全体コンプライアンス
             </CardTitle>
             <CardDescription>
-              Current compliance status across all ESG frameworks
+              すべてのESGフレームワークにおける現在のコンプライアンス状況
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-lg font-semibold text-gray-800">Compliance Rate</span>
+                <span className="text-lg font-semibold text-gray-800">コンプライアンス率</span>
                 <span className="text-2xl font-bold text-blue-600">75%</span>
               </div>
               <Progress value={75} className="h-3" />
               <div className="flex justify-between text-sm text-gray-600">
-                <span>15 of 20 KPIs compliant</span>
-                <span>Target: 85%</span>
+                <span>20のKPIのうち15が適合</span>
+                <span>目標: 85%</span>
               </div>
             </div>
           </CardContent>
@@ -109,7 +109,7 @@ export default function KPICompliancePage() {
               <div className="flex items-center space-x-3">
                 <CheckCircle className="h-8 w-8 text-emerald-600" />
                 <div>
-                  <p className="text-sm font-medium text-emerald-800">Compliant</p>
+                  <p className="text-sm font-medium text-emerald-800">適合</p>
                   <p className="text-2xl font-bold text-emerald-900">15</p>
                 </div>
               </div>
@@ -121,7 +121,7 @@ export default function KPICompliancePage() {
               <div className="flex items-center space-x-3">
                 <Clock className="h-8 w-8 text-yellow-600" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-800">At Risk</p>
+                  <p className="text-sm font-medium text-yellow-800">リスクあり</p>
                   <p className="text-2xl font-bold text-yellow-900">3</p>
                 </div>
               </div>
@@ -133,7 +133,7 @@ export default function KPICompliancePage() {
               <div className="flex items-center space-x-3">
                 <AlertTriangle className="h-8 w-8 text-red-600" />
                 <div>
-                  <p className="text-sm font-medium text-red-800">Non-Compliant</p>
+                  <p className="text-sm font-medium text-red-800">非適合</p>
                   <p className="text-2xl font-bold text-red-900">2</p>
                 </div>
               </div>
@@ -145,7 +145,7 @@ export default function KPICompliancePage() {
               <div className="flex items-center space-x-3">
                 <Target className="h-8 w-8 text-blue-600" />
                 <div>
-                  <p className="text-sm font-medium text-blue-800">Total KPIs</p>
+                  <p className="text-sm font-medium text-blue-800">総KPI数</p>
                   <p className="text-2xl font-bold text-blue-900">20</p>
                 </div>
               </div>
@@ -156,15 +156,15 @@ export default function KPICompliancePage() {
         {/* Compliance Breakdown */}
         <Card className="border-gray-200 shadow-lg">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-200">
-            <CardTitle className="text-xl text-gray-800">Compliance Breakdown</CardTitle>
+            <CardTitle className="text-xl text-gray-800">コンプライアンス詳細</CardTitle>
             <CardDescription>
-              Detailed view of KPI compliance by framework
+              フレームワーク別のKPIコンプライアンス詳細表示
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-gray-50 border-b border-gray-200 rounded-none">
-                <TabsTrigger value="overview" className="text-sm font-medium">Overview</TabsTrigger>
+                <TabsTrigger value="overview" className="text-sm font-medium">概要</TabsTrigger>
                 <TabsTrigger value="issb" className="text-sm font-medium">ISSB</TabsTrigger>
                 <TabsTrigger value="csrd" className="text-sm font-medium">CSRD</TabsTrigger>
               </TabsList>
@@ -174,11 +174,11 @@ export default function KPICompliancePage() {
                   <TableHeader className="bg-gray-50">
                     <TableRow className="border-b border-gray-200">
                       <TableHead className="font-semibold text-gray-700">KPI</TableHead>
-                      <TableHead className="font-semibold text-gray-700">Standard</TableHead>
-                      <TableHead className="font-semibold text-gray-700">Status</TableHead>
-                      <TableHead className="font-semibold text-gray-700">Progress</TableHead>
-                      <TableHead className="font-semibold text-gray-700">Due Date</TableHead>
-                      <TableHead className="font-semibold text-gray-700">Assigned To</TableHead>
+                      <TableHead className="font-semibold text-gray-700">基準</TableHead>
+                      <TableHead className="font-semibold text-gray-700">ステータス</TableHead>
+                      <TableHead className="font-semibold text-gray-700">進捗</TableHead>
+                      <TableHead className="font-semibold text-gray-700">期限</TableHead>
+                      <TableHead className="font-semibold text-gray-700">担当者</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -227,14 +227,14 @@ export default function KPICompliancePage() {
               <TabsContent value="issb" className="mt-0">
                 <div className="p-6 text-center text-gray-500">
                   <Target className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                  <p>ISSB framework compliance details</p>
+                  <p>ISSBフレームワークコンプライアンス詳細</p>
                 </div>
               </TabsContent>
               
               <TabsContent value="csrd" className="mt-0">
                 <div className="p-6 text-center text-gray-500">
                   <Target className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                  <p>CSRD framework compliance details</p>
+                  <p>CSRDフレームワークコンプライアンス詳細</p>
                 </div>
               </TabsContent>
             </Tabs>

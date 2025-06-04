@@ -10,43 +10,43 @@ import { Upload, FileText, ExternalLink, Download, Eye, Activity } from "lucide-
 
 const recentUploads = [
   {
-    fileName: "Sustainability Report 2023.csv",
-    source: "CSV Upload",
-    uploadedBy: "Sophia Clark",
-    uploadedOn: "2024-07-26 10:00 AM",
-    status: "Completed",
+    fileName: "サステナビリティレポート2023.csv",
+    source: "CSV アップロード",
+    uploadedBy: "田中 花子",
+    uploadedOn: "2024-07-26 10:00",
+    status: "完了",
     statusColor: "green"
   },
   {
-    fileName: "ERP Data Extract.xlsx",
-    source: "ERP System",
-    uploadedBy: "Ethan Bennett",
-    uploadedOn: "2024-07-25 03:30 PM",
-    status: "Completed",
+    fileName: "ERPデータ抽出.xlsx",
+    source: "ERPシステム",
+    uploadedBy: "佐藤 健太",
+    uploadedOn: "2024-07-25 15:30",
+    status: "完了",
     statusColor: "green"
   },
   {
-    fileName: "BI Dashboard Data.json",
-    source: "BI Tool",
-    uploadedBy: "Olivia Carter",
-    uploadedOn: "2024-07-24 09:15 AM",
-    status: "Processing",
+    fileName: "BIダッシュボードデータ.json",
+    source: "BIツール",
+    uploadedBy: "山田 美咲",
+    uploadedOn: "2024-07-24 09:15",
+    status: "処理中",
     statusColor: "yellow"
   },
   {
-    fileName: "Supplier Data.csv",
-    source: "CSV Upload",
-    uploadedBy: "Liam Davis",
-    uploadedOn: "2024-07-23 02:00 PM",
-    status: "Completed",
+    fileName: "サプライヤーデータ.csv",
+    source: "CSV アップロード",
+    uploadedBy: "鈴木 大介",
+    uploadedOn: "2024-07-23 14:00",
+    status: "完了",
     statusColor: "green"
   },
   {
-    fileName: "Energy Consumption Data.csv",
-    source: "CSV Upload",
-    uploadedBy: "Ava Evans",
-    uploadedOn: "2024-07-22 11:45 AM",
-    status: "Completed",
+    fileName: "エネルギー消費データ.csv",
+    source: "CSV アップロード",
+    uploadedBy: "高橋 雅子",
+    uploadedOn: "2024-07-22 11:45",
+    status: "完了",
     statusColor: "green"
   }
 ];
@@ -62,9 +62,9 @@ export default function DataManagementPage() {
               <Activity className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Data Management</h1>
+              <h1 className="text-3xl font-bold text-gray-900">データ管理</h1>
               <p className="text-gray-600">
-                Manage your ESG data imports, validation processes, and data quality monitoring.
+                ESGデータのインポート、検証プロセス、データ品質監視を管理します。
               </p>
             </div>
           </div>
@@ -74,31 +74,31 @@ export default function DataManagementPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200">
             <CardHeader className="pb-2">
-              <CardTitle className="text-emerald-800 text-lg">Total Files</CardTitle>
+              <CardTitle className="text-emerald-800 text-lg">総ファイル数</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-emerald-900">247</div>
-              <p className="text-xs text-emerald-600 mt-1">+12 this month</p>
+              <p className="text-xs text-emerald-600 mt-1">今月 +12</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
             <CardHeader className="pb-2">
-              <CardTitle className="text-blue-800 text-lg">Data Sources</CardTitle>
+              <CardTitle className="text-blue-800 text-lg">データソース</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-900">8</div>
-              <p className="text-xs text-blue-600 mt-1">Connected systems</p>
+              <p className="text-xs text-blue-600 mt-1">接続済みシステム</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
             <CardHeader className="pb-2">
-              <CardTitle className="text-purple-800 text-lg">Processing</CardTitle>
+              <CardTitle className="text-purple-800 text-lg">処理中</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-purple-900">3</div>
-              <p className="text-xs text-purple-600 mt-1">Files in queue</p>
+              <p className="text-xs text-purple-600 mt-1">待機中のファイル</p>
             </CardContent>
           </Card>
         </div>
@@ -108,25 +108,25 @@ export default function DataManagementPage() {
           <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-200">
             <CardTitle className="text-xl text-gray-800 flex items-center">
               <Upload className="w-5 h-5 mr-2 text-emerald-600" />
-              Data Import
+              データインポート
             </CardTitle>
             <CardDescription>
-              Upload new ESG data files or connect to external systems
+              新しいESGデータファイルをアップロードするか、外部システムに接続します
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-4">
               <Button className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg">
                 <Upload className="w-4 h-4 mr-2" />
-                CSV Upload
+                CSV アップロード
               </Button>
               <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50">
                 <FileText className="w-4 h-4 mr-2" />
-                System Connect
+                システム接続
               </Button>
               <Button variant="outline" className="border-purple-300 text-purple-700 hover:bg-purple-50">
                 <Download className="w-4 h-4 mr-2" />
-                Bulk Import
+                一括インポート
               </Button>
             </div>
           </CardContent>
@@ -135,21 +135,21 @@ export default function DataManagementPage() {
         {/* Recent Uploads Section */}
         <Card className="border-gray-200 shadow-lg">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-200">
-            <CardTitle className="text-xl text-gray-800">Recent Uploads</CardTitle>
+            <CardTitle className="text-xl text-gray-800">最近のアップロード</CardTitle>
             <CardDescription>
-              Monitor your latest data uploads and their processing status
+              最新のデータアップロードとその処理ステータスを監視します
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader className="bg-gray-50">
                 <TableRow className="border-b border-gray-200">
-                  <TableHead className="font-semibold text-gray-700">File Name</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Source</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Uploaded By</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Date & Time</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Status</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Actions</TableHead>
+                  <TableHead className="font-semibold text-gray-700">ファイル名</TableHead>
+                  <TableHead className="font-semibold text-gray-700">ソース</TableHead>
+                  <TableHead className="font-semibold text-gray-700">アップロード者</TableHead>
+                  <TableHead className="font-semibold text-gray-700">日時</TableHead>
+                  <TableHead className="font-semibold text-gray-700">ステータス</TableHead>
+                  <TableHead className="font-semibold text-gray-700">アクション</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

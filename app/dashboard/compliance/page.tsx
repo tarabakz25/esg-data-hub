@@ -3,6 +3,12 @@
 import { useState, useEffect } from 'react'
 import ComplianceChecker from '@/components/compliance/ComplianceChecker'
 import ComplianceHistory from '@/components/compliance/ComplianceHistory'
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { PageHeader } from "@/components/layout/page-header";
+import { Card, CardContent } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui";
+import { Shield, CheckCircle, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function CompliancePage() {
   const [activeTab, setActiveTab] = useState<'check' | 'history'>('check')
@@ -14,70 +20,87 @@ export default function CompliancePage() {
   console.log('🔍 CompliancePage rendering, activeTab:', activeTab)
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">KPI Compliance Check</h1>
-        <p className="mt-2 text-gray-600">
-          ISSB/CSRD基準に基づく必須KPIの欠損チェックと監査対応を支援します。
-        </p>
-        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
-          <p className="text-sm text-blue-700">
-            🔍 Debug: ページが正常に表示されています。activeTab = {activeTab}
-          </p>
-        </div>
-      </div>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <PageHeader
+          title="KPI Compliance Check"
+          description="ISSB/CSRD基準に基づく必須KPIの欠損チェックと監査対応を支援します。"
+          esgCategory="governance"
+        />
 
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+        {/* Debug Info */}
+        <Card className="bg-secondary/5 border-secondary/20">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <StatusBadge status="success" size="sm">Debug</StatusBadge>
+              <span className="text-sm text-secondary">
+                ページが正常に表示されています。activeTab = {activeTab}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tab Navigation */}
+        <div className="flex space-x-1 bg-muted p-1 rounded-lg">
           <button
             onClick={() => {
               console.log('🔍 Switching to check tab')
               setActiveTab('check')
             }}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={cn(
+              "flex-1 px-4 py-2 text-sm font-medium rounded-md transition-theme flex items-center justify-center space-x-2",
               activeTab === 'check'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+                ? 'bg-card text-foreground shadow-sm border border-border'
+                : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
+            )}
           >
-            コンプライアンスチェック
+            <CheckCircle className="w-4 h-4" />
+            <span>コンプライアンスチェック</span>
           </button>
           <button
             onClick={() => {
               console.log('🔍 Switching to history tab')
               setActiveTab('history')
             }}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={cn(
+              "flex-1 px-4 py-2 text-sm font-medium rounded-md transition-theme flex items-center justify-center space-x-2",
               activeTab === 'history'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+                ? 'bg-card text-foreground shadow-sm border border-border'
+                : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
+            )}
           >
-            チェック履歴
+            <Clock className="w-4 h-4" />
+            <span>チェック履歴</span>
           </button>
-        </nav>
-      </div>
+        </div>
 
-      {/* Tab Content */}
-      <div className="bg-white shadow rounded-lg">
-        {activeTab === 'check' && (
-          <>
-            <div className="p-4 bg-green-50 border-b">
-              <p className="text-sm text-green-700">🔍 Debug: ComplianceChecker コンポーネントを表示中</p>
-            </div>
-            <ComplianceChecker />
-          </>
-        )}
-        {activeTab === 'history' && (
-          <>
-            <div className="p-4 bg-yellow-50 border-b">
-              <p className="text-sm text-yellow-700">🔍 Debug: ComplianceHistory コンポーネントを表示中</p>
-            </div>
-            <ComplianceHistory />
-          </>
-        )}
+        {/* Tab Content */}
+        <Card className="card-shadow">
+          {activeTab === 'check' && (
+            <>
+              <CardContent className="p-4 bg-success/5 border-b border-border">
+                <div className="flex items-center space-x-2">
+                  <StatusBadge status="success" size="sm">Debug</StatusBadge>
+                  <span className="text-sm text-success">ComplianceChecker コンポーネントを表示中</span>
+                </div>
+              </CardContent>
+              <ComplianceChecker />
+            </>
+          )}
+          {activeTab === 'history' && (
+            <>
+              <CardContent className="p-4 bg-warning/5 border-b border-border">
+                <div className="flex items-center space-x-2">
+                  <StatusBadge status="warning" size="sm">Debug</StatusBadge>
+                  <span className="text-sm text-warning">ComplianceHistory コンポーネントを表示中</span>
+                </div>
+              </CardContent>
+              <ComplianceHistory />
+            </>
+          )}
+        </Card>
       </div>
-    </div>
+    </DashboardLayout>
   )
 } 

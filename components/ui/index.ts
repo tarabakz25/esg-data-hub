@@ -13,4 +13,11 @@ export * from "./select"
 export * from "./skeleton"
 export * from "./table"
 export * from "./tabs"
-export * from "./timeline" 
+export * from "./timeline"
+
+// New ESG Design System exports
+export * from "./status-badge"
+export * from "./esg-theme"
+
+// Layout components
+export * from "../layout/page-header" 

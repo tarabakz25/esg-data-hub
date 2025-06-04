@@ -16,33 +16,33 @@ export interface NavigationItem {
 
 export const navigation: NavigationItem[] = [
   { 
-    name: "Dashboard", 
+    name: "ダッシュボード", 
     href: "/dashboard", 
     icon: Home,
-    description: "Overview and analytics dashboard"
+    description: "概要および分析ダッシュボード"
   },
   { 
-    name: "Data Management", 
+    name: "データ管理", 
     href: "/data-management", 
     icon: Database,
-    description: "Manage ESG data collection and sources"
+    description: "ESGデータ収集とデータソースの管理"
   },
   { 
-    name: "KPI Compliance", 
+    name: "KPIコンプライアンス", 
     href: "/kpi-compliance", 
     icon: ClipboardCheck,
-    description: "Monitor KPI compliance status"
+    description: "KPIコンプライアンス状況の監視"
   },
   { 
-    name: "Catalog", 
+    name: "カタログ", 
     href: "/catalog", 
     icon: BarChart3,
-    description: "Browse data catalog and KPIs"
+    description: "データカタログとKPIの閲覧"
   },
   { 
-    name: "Records", 
+    name: "レコード", 
     href: "/records", 
     icon: FileText,
-    description: "View and manage data records"
+    description: "データレコードの表示と管理"
   }
 ]; 

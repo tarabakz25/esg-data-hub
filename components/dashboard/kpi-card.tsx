@@ -1,8 +1,9 @@
 "use client"
 
-import { TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui"
 import { LucideIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface KPICardProps {
   title: string
@@ -12,7 +13,8 @@ interface KPICardProps {
   trend?: "up" | "down" | "neutral"
   trendValue?: string
   unit?: string
-  status?: "good" | "warning" | "error"
+  status?: "good" | "warning" | "error" | "neutral"
+  className?: string
 }
 
 export function KPICard({
@@ -23,56 +25,104 @@ export function KPICard({
   trend,
   trendValue,
   unit,
-  status = "good"
+  status = "neutral",
+  className
 }: KPICardProps) {
   const getTrendIcon = () => {
     switch (trend) {
       case "up":
-        return <TrendingUp className="h-4 w-4 text-green-600" />
+        return <TrendingUp className="h-4 w-4 text-success" />
       case "down":
-        return <TrendingDown className="h-4 w-4 text-red-600" />
+        return <TrendingDown className="h-4 w-4 text-error" />
       case "neutral":
-        return <Minus className="h-4 w-4 text-gray-600" />
+        return <Minus className="h-4 w-4 text-muted-foreground" />
       default:
         return null
     }
   }
 
-  const getStatusColor = () => {
+  const getStatusStyles = () => {
     switch (status) {
       case "good":
-        return "border-green-200 bg-green-50"
+        return "border-primary/20 bg-primary/5 hover:bg-primary/10"
       case "warning":
-        return "border-yellow-200 bg-yellow-50"
+        return "border-warning/20 bg-warning/5 hover:bg-warning/10"
       case "error":
-        return "border-red-200 bg-red-50"
+        return "border-error/20 bg-error/5 hover:bg-error/10"
       default:
-        return ""
+        return "border-border bg-card hover:bg-muted/50"
+    }
+  }
+
+  const getValueColor = () => {
+    switch (status) {
+      case "good":
+        return "text-primary"
+      case "warning":
+        return "text-warning"
+      case "error":
+        return "text-error"
+      default:
+        return "text-foreground"
+    }
+  }
+
+  const getIconColor = () => {
+    switch (status) {
+      case "good":
+        return "text-primary"
+      case "warning":
+        return "text-warning"
+      case "error":
+        return "text-error"
+      default:
+        return "text-muted-foreground"
     }
   }
 
   return (
-    <Card className={`${getStatusColor()}`}>
+    <Card className={cn(
+      "transition-all duration-200 hover:shadow-md border",
+      getStatusStyles(),
+      className
+    )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-gray-700">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        {Icon && <Icon className="h-4 w-4 text-gray-600" />}
+        <div className="flex items-center space-x-2">
+          {status === "error" && (
+            <AlertTriangle className="h-4 w-4 text-error" />
+          )}
+          {Icon && <Icon className={cn("h-4 w-4", getIconColor())} />}
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-gray-900">
+        <div className={cn("text-2xl font-bold mb-1", getValueColor())}>
           {value}
-          {unit && <span className="text-sm font-normal text-gray-600 ml-1">{unit}</span>}
+          {unit && <span className="text-sm font-normal text-muted-foreground ml-1">{unit}</span>}
         </div>
+        
         {(description || trend) && (
-          <div className="flex items-center space-x-2 text-xs text-gray-600 mt-1">
+          <div className="flex items-center justify-between text-xs">
             {trend && (
               <div className="flex items-center space-x-1">
                 {getTrendIcon()}
-                {trendValue && <span>{trendValue}</span>}
+                {trendValue && (
+                  <span className={cn(
+                    "font-medium",
+                    trend === "up" ? "text-success" : 
+                    trend === "down" ? "text-error" : 
+                    "text-muted-foreground"
+                  )}>
+                    {trendValue}
+                  </span>
+                )}
               </div>
             )}
-            {description && <p>{description}</p>}
+            {description && (
+              <p className="text-muted-foreground truncate">{description}</p>
+            )}
           </div>
         )}
       </CardContent>
