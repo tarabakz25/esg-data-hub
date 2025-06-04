@@ -1,4 +1,4 @@
-import { OpenRouterEmbeddingClient } from './openrouter-client';
+import { OpenAIEmbeddingClient } from './openai-client';
 import { VectorUtils } from './prisma';
 import { KPIDictionary, KPIDictionaryManager, ESG_KPI_DICTIONARY } from './kpi-dictionary';
 import { type KPIGroupData } from './csv-analyzer';
@@ -45,12 +45,12 @@ export interface KPIGroupMapping {
  */
 export class KPIEmbeddingManager {
   private dictionaryManager: KPIDictionaryManager;
-  private openRouterClient: OpenRouterEmbeddingClient;
+  private openaiClient: OpenAIEmbeddingClient;
   private kpiEmbeddings: Map<string, KPIEmbedding>;
 
   constructor(embeddingClient?: any) {
     this.dictionaryManager = new KPIDictionaryManager();
-    this.openRouterClient = embeddingClient || new OpenRouterEmbeddingClient();
+    this.openaiClient = embeddingClient || new OpenAIEmbeddingClient();
     this.kpiEmbeddings = new Map();
   }
 
@@ -64,7 +64,7 @@ export class KPIEmbeddingManager {
     );
 
     try {
-      const embeddings = await this.openRouterClient.generateBatchEmbeddings(embeddingTexts);
+      const embeddings = await this.openaiClient.generateBatchEmbeddings(embeddingTexts);
       
       const kpiEmbeddings: KPIEmbedding[] = [];
       for (let i = 0; i < kpis.length; i++) {
@@ -138,7 +138,7 @@ export class KPIEmbeddingManager {
     console.log(`🔍 Group embedding text: "${embeddingText}"`);
 
     // 2. 埋め込み生成
-    const groupEmbedding = await this.openRouterClient.generateEmbedding(embeddingText);
+    const groupEmbedding = await this.openaiClient.generateEmbedding(embeddingText);
 
     // 3. 類似度検索
     const similarKPIs = await this.findSimilarKPIs(groupEmbedding, limit, threshold);
@@ -413,7 +413,7 @@ export class KPIEmbeddingManager {
 
     console.log(`🔍 Search text: "${searchText}"`);
 
-    const columnEmbedding = await this.openRouterClient.generateEmbedding(searchText);
+    const columnEmbedding = await this.openaiClient.generateEmbedding(searchText);
 
     // 3. 類似度検索
     const similarKPIs = await this.findSimilarKPIs(columnEmbedding, limit, 0.5);
@@ -445,7 +445,7 @@ export class KPIEmbeddingManager {
     const textResults = this.dictionaryManager.searchByText(query);
     
     // 2. ベクトル検索
-    const queryEmbedding = await this.openRouterClient.generateEmbedding(query);
+    const queryEmbedding = await this.openaiClient.generateEmbedding(query);
     const vectorResults = await this.findSimilarKPIs(queryEmbedding, 10, 0.3);
 
     // 3. スコア統合

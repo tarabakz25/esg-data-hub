@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OpenRouterEmbeddingClient } from '@/lib/openrouter-client';
+import { OpenAIEmbeddingClient } from '@/lib/openai-client';
 import { SampleValueAnalyzer, type KPIGroupAnalysis } from '@/lib/sample-analyzer';
 import { CSVAnalyzer, type KPIGroupData } from '@/lib/csv-analyzer';
 import { prisma, VectorUtils } from '@/lib/prisma';
 
-const openRouterClient = new OpenRouterEmbeddingClient();
+const openaiClient = new OpenAIEmbeddingClient();
 
 interface SampleEmbeddingRequest {
   dataRowId: number;
@@ -39,11 +39,11 @@ export async function POST(request: NextRequest) {
       ? sampleValues.slice(0, 5).join(', ') 
       : 'no samples';
     
-    // 3. OpenRouter用の検索テキスト作成
+    // 3. OpenAI用の検索テキスト作成
     const hybridText = SampleValueAnalyzer.createEmbeddingSummary(analysis, columnName);
     
-    // 4. OpenRouter で埋め込み生成
-    const embedding = await openRouterClient.generateEmbedding(hybridText);
+    // 4. OpenAI で埋め込み生成
+    const embedding = await openaiClient.generateEmbedding(hybridText);
 
     const processingTime = Date.now() - startTime;
 
@@ -56,15 +56,15 @@ export async function POST(request: NextRequest) {
       embedding,
       dimensions: embedding.length, // OpenAI ada-002は1536次元
       processingTimeMs: processingTime,
-      provider: 'openrouter',
+      provider: 'openai',
     });
 
   } catch (error) {
     console.error('Sample embedding generation failed:', error);
     
-    if (error instanceof Error && error.message.includes('OpenRouter')) {
+    if (error instanceof Error && error.message.includes('OpenAI')) {
       return NextResponse.json(
-        { error: 'OpenRouter API error', details: error.message },
+        { error: 'OpenAI API error', details: error.message },
         { status: 503 }
       );
     }
@@ -119,8 +119,8 @@ async function handleColumnBatchProcessing(columns: any[]) {
     return { columnName, analysis, hybridText };
   });
 
-  // OpenRouter で一括埋め込み生成
-  const embeddings = await openRouterClient.generateBatchEmbeddings(hybridTexts.map(h => h.hybridText));
+  // OpenAI で一括埋め込み生成
+  const embeddings = await openaiClient.generateBatchEmbeddings(hybridTexts.map(h => h.hybridText));
 
   // 結果をまとめる
   for (let i = 0; i < columns.length; i++) {
@@ -142,7 +142,7 @@ async function handleColumnBatchProcessing(columns: any[]) {
     dimensions: embeddings[0]?.length || 1536,
     processingTimeMs: processingTime,
     avgTimePerColumn: processingTime / columns.length,
-    provider: 'openrouter',
+    provider: 'openai',
     processingType: 'column-based'
   });
 }
@@ -178,8 +178,8 @@ async function handleKPIGroupBatchProcessing(kpiGroups: KPIGroupData[]) {
     };
   });
 
-  // OpenRouter で一括埋め込み生成
-  const embeddings = await openRouterClient.generateBatchEmbeddings(embeddingTexts.map(et => et.enhancedText));
+  // OpenAI で一括埋め込み生成
+  const embeddings = await openaiClient.generateBatchEmbeddings(embeddingTexts.map(et => et.enhancedText));
 
   // 結果をまとめる
   for (let i = 0; i < kpiGroups.length; i++) {
@@ -209,7 +209,7 @@ async function handleKPIGroupBatchProcessing(kpiGroups: KPIGroupData[]) {
     dimensions: embeddings[0]?.length || 1536,
     processingTimeMs: processingTime,
     avgTimePerKPI: processingTime / kpiGroups.length,
-    provider: 'openrouter',
+    provider: 'openai',
     processingType: 'kpi-group-based'
   });
 }

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CSVAnalyzer, type KPIGroupData, type CSVAnalysisResult } from '@/lib/csv-analyzer';
-import { OpenRouterEmbeddingClient } from '@/lib/openrouter-client';
+import { OpenAIEmbeddingClient } from '@/lib/openai-client';
 import { KPIEmbeddingManager } from '@/lib/kpi-embedding-manager';
 
-const openRouterClient = new OpenRouterEmbeddingClient();
+const openaiClient = new OpenAIEmbeddingClient();
 
 interface CSVMappingRequest {
   csvData: any[];

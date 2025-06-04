@@ -31,15 +31,15 @@ export async function POST(request: NextRequest) {
       mapping,
       processingTimeMs: processingTime,
       dictionaryStats: kpiManager.getDictionaryStats(),
-      provider: 'openrouter', // プロバイダー識別用
+      provider: 'openai', // プロバイダー識別用
     });
 
   } catch (error) {
     console.error('KPI similarity search failed:', error);
     
-    if (error instanceof Error && error.message.includes('OpenRouter')) {
+    if (error instanceof Error && error.message.includes('OpenAI')) {
       return NextResponse.json(
-        { error: 'OpenRouter API error', details: error.message },
+        { error: 'OpenAI API error', details: error.message },
         { status: 503 }
       );
     }

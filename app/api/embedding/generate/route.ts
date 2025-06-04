@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OpenRouterEmbeddingClient } from '@/lib/openrouter-client';
+import { OpenAIEmbeddingClient } from '@/lib/openai-client';
 import { prisma, VectorUtils } from '@/lib/prisma';
 
-const openRouterClient = new OpenRouterEmbeddingClient();
+const openaiClient = new OpenAIEmbeddingClient();
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
 
     const startTime = Date.now();
 
-    // OpenRouter APIで埋め込み生成
-    const embeddings = await openRouterClient.generateBatchEmbeddings(columnNames);
+    // OpenAI APIで埋め込み生成
+    const embeddings = await openaiClient.generateBatchEmbeddings(columnNames);
 
     const processingTime = Date.now() - startTime;
 
@@ -43,16 +43,16 @@ export async function POST(request: NextRequest) {
       count: embeddings.length,
       dimensions: embeddings[0]?.length || 1536, // OpenAI ada-002は1536次元
       processingTimeMs: processingTime,
-      provider: 'openrouter', // プロバイダー識別用
+      provider: 'openai', // プロバイダー識別用
     });
 
   } catch (error) {
     console.error('Embedding generation failed:', error);
     
-    // OpenRouter API エラーの場合は詳細を返す
-    if (error instanceof Error && error.message.includes('OpenRouter')) {
+    // OpenAI API エラーの場合は詳細を返す
+    if (error instanceof Error && error.message.includes('OpenAI')) {
       return NextResponse.json(
-        { error: 'OpenRouter API error', details: error.message },
+        { error: 'OpenAI API error', details: error.message },
         { status: 503 }
       );
     }

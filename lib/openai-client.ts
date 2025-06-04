@@ -1,24 +1,23 @@
 /**
- * OpenRouter Embedding Client
- * GeminiからOpenRouterに移行したファイル
+ * OpenAI Embedding Client
+ * OpenRouterからOpenAI直接APIに変更
  */
 import { OpenAI } from 'openai';
 
-export class OpenRouterEmbeddingClient {
+export class OpenAIEmbeddingClient {
   private client: OpenAI;
   private model: string;
   
   constructor() {
-    if (!process.env.OPENROUTER_API_KEY) {
-      throw new Error('OPENROUTER_API_KEY environment variable is required');
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is required');
     }
     
     this.client = new OpenAI({
-      baseURL: 'https://openrouter.ai/api/v1',
-      apiKey: process.env.OPENROUTER_API_KEY,
+      apiKey: process.env.OPENAI_API_KEY,
     });
-    // text-embedding-ada-002 互換の埋め込みモデルを使用
-    this.model = "openai/text-embedding-ada-002";
+    // OpenAI の text-embedding-ada-002 を直接使用
+    this.model = "text-embedding-ada-002";
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
@@ -29,18 +28,18 @@ export class OpenRouterEmbeddingClient {
       });
       
       if (!response.data || response.data.length === 0) {
-        throw new Error('Invalid embedding response from OpenRouter');
+        throw new Error('Invalid embedding response from OpenAI');
       }
       
       return response.data[0].embedding;
     } catch (error) {
-      console.error('OpenRouter embedding generation failed:', error);
+      console.error('OpenAI embedding generation failed:', error);
       throw new Error(`Failed to generate embedding: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   async generateBatchEmbeddings(texts: string[]): Promise<number[][]> {
-    // OpenRouter APIでバッチ処理をサポート
+    // OpenAI APIでバッチ処理をサポート
     // レート制限を考慮してリトライ機能付きで実装
     try {
       const response = await this.retryWithBackoff(() => 
@@ -77,7 +76,7 @@ export class OpenRouterEmbeddingClient {
           (error.message.includes('quota') || error.message.includes('rate') || error.message.includes('429'));
         const delay = isRateLimit ? baseDelay * Math.pow(3, i) : baseDelay * Math.pow(2, i);
         
-        console.warn(`OpenRouter API retry ${i + 1}/${maxRetries} after ${delay}ms. Error:`, error);
+        console.warn(`OpenAI API retry ${i + 1}/${maxRetries} after ${delay}ms. Error:`, error);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -95,7 +94,7 @@ export class OpenRouterEmbeddingClient {
 
 /**
  * テスト用のモックEmbeddingClient
- * OpenRouter APIの代わりに文字列マッチングベースの類似度を計算
+ * OpenAI APIの代わりに文字列マッチングベースの類似度を計算
  */
 export class MockEmbeddingClient {
   private readonly EMBEDDING_SIZE = 1536; // OpenAI text-embedding-ada-002と同じ1536次元
