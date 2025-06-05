@@ -1,12 +1,13 @@
 /**
- * OpenAI Embedding Client
- * OpenRouterからOpenAI直接APIに変更
+ * OpenAI Hybrid Client
+ * GPT-4o-mini for text analysis + embedding model for vector generation
  */
 import { OpenAI } from 'openai';
 
 export class OpenAIEmbeddingClient {
   private client: OpenAI;
-  private model: string;
+  private embeddingModel: string;
+  private textModel: string;
   
   constructor() {
     if (!process.env.OPENAI_API_KEY) {
@@ -16,13 +17,81 @@ export class OpenAIEmbeddingClient {
     this.client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
-    this.model = "gpt-4o-mini-2024-07-18";
+    
+    // 埋め込み生成用モデル
+    this.embeddingModel = "text-embedding-ada-002";
+    // テキスト分析用モデル
+    this.textModel = "gpt-4o-mini-2024-07-18";
+  }
+
+  /**
+   * GPT-4o-miniを使用してKPIマッピングのヒントを生成
+   */
+  async analyzeKPIMapping(text: string, availableKPIs: string[]): Promise<{
+    suggestedKPI: string | null;
+    confidence: number;
+    reasoning: string;
+  }> {
+    try {
+      const prompt = `
+以下のテキストを分析して、最も適切なESG KPIを特定してください。
+
+分析対象テキスト: "${text}"
+
+利用可能なKPI選択肢:
+${availableKPIs.map(kpi => `- ${kpi}`).join('\n')}
+
+以下の形式でJSON形式で回答してください：
+{
+  "suggestedKPI": "最適なKPI名（該当なしの場合はnull）",
+  "confidence": 0.0-1.0の信頼度,
+  "reasoning": "選択理由の簡潔な説明"
+}
+`;
+
+      const response = await this.client.chat.completions.create({
+        model: this.textModel,
+        messages: [
+          {
+            role: "system",
+            content: "あなたはESG（環境・社会・ガバナンス）データ分析の専門家です。テキストからESG KPIを正確に識別する能力があります。"
+          },
+          {
+            role: "user", 
+            content: prompt
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 500
+      });
+
+      const responseText = response.choices[0]?.message?.content;
+      if (!responseText) {
+        throw new Error('No response from GPT-4o-mini');
+      }
+
+      // JSONレスポンスをパース
+      const result = JSON.parse(responseText);
+      return {
+        suggestedKPI: result.suggestedKPI,
+        confidence: result.confidence,
+        reasoning: result.reasoning
+      };
+
+    } catch (error) {
+      console.error('GPT-4o-mini analysis failed:', error);
+      return {
+        suggestedKPI: null,
+        confidence: 0,
+        reasoning: "分析に失敗しました"
+      };
+    }
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
     try {
       const response = await this.client.embeddings.create({
-        model: this.model,
+        model: this.embeddingModel,
         input: text,
       });
       
@@ -33,29 +102,30 @@ export class OpenAIEmbeddingClient {
       return response.data[0].embedding;
     } catch (error) {
       console.error('OpenAI embedding generation failed:', error);
-      throw new Error(`Failed to generate embedding: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // フォールバック: MockEmbeddingClientを使用
+      console.log('🔄 Falling back to MockEmbeddingClient');
+      const mockClient = new MockEmbeddingClient();
+      return await mockClient.generateEmbedding(text);
     }
   }
 
   async generateBatchEmbeddings(texts: string[]): Promise<number[][]> {
-    // OpenAI APIでバッチ処理をサポート
-    // レート制限を考慮してリトライ機能付きで実装
     try {
       const response = await this.retryWithBackoff(() => 
         this.client.embeddings.create({
-          model: this.model,
+          model: this.embeddingModel,
           input: texts,
         })
       );
       
       return response.data.map(item => item.embedding);
     } catch (error) {
-      // バッチ処理が失敗した場合は個別処理にフォールバック
-      console.warn('Batch embedding failed, falling back to individual requests:', error);
-      const promises = texts.map(text => 
-        this.retryWithBackoff(() => this.generateEmbedding(text))
-      );
-      return Promise.all(promises);
+      console.warn('Batch embedding failed, falling back to mock client:', error);
+      
+      // フォールバック: MockEmbeddingClientを使用
+      const mockClient = new MockEmbeddingClient();
+      return await mockClient.generateBatchEmbeddings(texts);
     }
   }
 

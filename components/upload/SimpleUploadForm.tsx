@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { CloudArrowUpIcon, DocumentIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { SimpleErrorBoundary } from '../ui/error-boundary';
@@ -18,39 +18,60 @@ export default function SimpleUploadForm() {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ファイル検証をメモ化
   const validateFile = useCallback((file: File): string | null => {
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    const allowedTypes = ['text/csv', 'application/vnd.ms-excel'];
+    const maxSize = 50 * 1024 * 1024; // 50MB (本番環境に合わせて更新)
+    const allowedTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+    const allowedExtensions = ['.csv', '.xlsx', '.xls'];
     
     if (file.size > maxSize) {
-      return 'ファイルサイズは10MB以下にしてください';
+      return 'ファイルサイズは50MB以下にしてください';
     }
     
-    if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.csv')) {
-      return 'CSVファイルを選択してください';
+    if (file.size === 0) {
+      return '空のファイルはアップロードできません';
+    }
+    
+    const hasValidType = allowedTypes.includes(file.type);
+    const hasValidExtension = allowedExtensions.some(ext => 
+      file.name.toLowerCase().endsWith(ext)
+    );
+    
+    if (!hasValidType && !hasValidExtension) {
+      return 'CSV、Excel（.xlsx、.xls）ファイルを選択してください';
     }
     
     return null;
   }, []);
 
+  // ファイル選択ボタンのクリックハンドラー
+  const handleFileSelectClick = useCallback(() => {
+    if (uploadProgress) return; // アップロード中は無効
+    fileInputRef.current?.click();
+  }, [uploadProgress]);
+
   // ドラッグ&ドロップハンドラー
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (uploadProgress) return; // アップロード中は無効
+    
     if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
     } else if (e.type === "dragleave") {
       setDragActive(false);
     }
-  }, []);
+  }, [uploadProgress]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     setError(null);
+
+    if (uploadProgress) return; // アップロード中は無効
 
     const files = e.dataTransfer.files;
     if (files && files[0]) {
@@ -64,7 +85,7 @@ export default function SimpleUploadForm() {
       
       setFile(selectedFile);
     }
-  }, [validateFile]);
+  }, [validateFile, uploadProgress]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -202,6 +223,9 @@ export default function SimpleUploadForm() {
     setUploadProgress(null);
     setError(null);
     setDragActive(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   }, []);
 
   return (
@@ -209,10 +233,10 @@ export default function SimpleUploadForm() {
       <div className="max-w-2xl mx-auto p-6">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            CSVファイルアップロード
+            ESGデータファイルアップロード
           </h1>
           <p className="text-gray-600">
-            ESGデータのCSVファイルをアップロードして、自動的にKPIマッピングを実行します
+            CSV、Excelファイルをアップロードして、自動的にKPIマッピングを実行します
           </p>
         </div>
 
@@ -228,12 +252,25 @@ export default function SimpleUploadForm() {
           </div>
         )}
 
-        {/* メインアップロードエリア */}
+        {/* ファイル選択エリア */}
         <div className="mb-6">
+          {/* 隠されたファイル入力 */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            onChange={handleFileSelect}
+            className="hidden"
+            disabled={!!uploadProgress}
+          />
+
+          {/* ドラッグ&ドロップエリア */}
           <div
             className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
               dragActive
                 ? 'border-blue-400 bg-blue-50'
+                : uploadProgress
+                ? 'border-gray-200 bg-gray-50'
                 : 'border-gray-300 hover:border-gray-400'
             }`}
             onDragEnter={handleDrag}
@@ -241,21 +278,13 @@ export default function SimpleUploadForm() {
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleFileSelect}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              disabled={!!uploadProgress}
-            />
-            
             {file ? (
               <div className="space-y-4">
                 <DocumentIcon className="mx-auto h-12 w-12 text-green-500" />
                 <div>
                   <p className="text-lg font-medium text-gray-900">{file.name}</p>
                   <p className="text-sm text-gray-500">
-                    サイズ: {(file.size / 1024).toFixed(1)} KB
+                    サイズ: {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
                 
@@ -263,15 +292,21 @@ export default function SimpleUploadForm() {
                   <div className="flex space-x-3 justify-center">
                     <button
                       onClick={uploadFile}
-                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
                     >
-                      アップロード開始
+                      📤 アップロード開始
+                    </button>
+                    <button
+                      onClick={handleFileSelectClick}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                    >
+                      📁 別のファイルを選択
                     </button>
                     <button
                       onClick={resetForm}
-                      className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
+                      className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors"
                     >
-                      ファイルを変更
+                      🗑️ クリア
                     </button>
                   </div>
                 )}
@@ -281,14 +316,25 @@ export default function SimpleUploadForm() {
                 <CloudArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
                 <div>
                   <p className="text-lg font-medium text-gray-900">
-                    CSVファイルをドラッグ&ドロップ
+                    ファイルをここにドラッグ&ドロップ
                   </p>
-                  <p className="text-sm text-gray-500">
-                    または、クリックしてファイルを選択
+                  <p className="text-sm text-gray-500 mb-4">
+                    またはボタンをクリックしてファイルを選択
                   </p>
+                  <button
+                    onClick={handleFileSelectClick}
+                    disabled={!!uploadProgress}
+                    className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                      uploadProgress
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    📁 ファイルを選択
+                  </button>
                 </div>
                 <p className="text-xs text-gray-400">
-                  サポート形式: CSV（最大10MB）
+                  サポート形式: CSV, Excel (.xlsx, .xls)（最大50MB）
                 </p>
               </div>
             )}
@@ -305,12 +351,20 @@ export default function SimpleUploadForm() {
               <p className="text-green-800 mb-4">
                 ✅ アップロードと処理が正常に完了しました！
               </p>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-              >
-                ダッシュボードを表示
-              </button>
+              <div className="space-x-3">
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                >
+                  📊 ダッシュボードを表示
+                </button>
+                <button
+                  onClick={() => router.push('/data-management')}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                >
+                  📋 データ管理画面へ
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -327,18 +381,56 @@ export default function SimpleUploadForm() {
                   onClick={uploadFile}
                   className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
                 >
-                  再試行
+                  🔄 再試行
                 </button>
                 <button
                   onClick={resetForm}
                   className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
                 >
-                  リセット
+                  🗑️ リセット
                 </button>
               </div>
             </div>
           </div>
         )}
+
+        {/* ヘルプセクション */}
+        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-blue-900 mb-4">💡 使用方法</h3>
+          <div className="space-y-3 text-blue-700">
+            <div className="flex items-start space-x-3">
+              <span className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-sm font-semibold">1</span>
+              <div>
+                <p className="font-medium">ファイルを選択</p>
+                <p className="text-sm">ドラッグ&ドロップまたは「ファイルを選択」ボタンをクリック</p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <span className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-sm font-semibold">2</span>
+              <div>
+                <p className="font-medium">アップロード開始</p>
+                <p className="text-sm">「アップロード開始」ボタンをクリックして処理を開始</p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <span className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-sm font-semibold">3</span>
+              <div>
+                <p className="font-medium">自動処理</p>
+                <p className="text-sm">AI による自動KPIマッピングと累積データの更新</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-white rounded border border-blue-200">
+            <h4 className="font-medium text-blue-900 mb-2">📋 サポートするファイル形式</h4>
+            <ul className="text-sm text-blue-700 space-y-1">
+              <li>• <strong>CSV</strong>: カンマ区切りファイル (.csv)</li>
+              <li>• <strong>Excel</strong>: Microsoft Excel ファイル (.xlsx, .xls)</li>
+              <li>• <strong>ファイルサイズ</strong>: 最大 50MB</li>
+              <li>• <strong>推奨列</strong>: kpiId, value, unit, period, dataRowId</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </SimpleErrorBoundary>
   );

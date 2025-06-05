@@ -167,6 +167,33 @@ model User {
   uploads       Upload[]
 }
 
+/// ------------ 監査証跡用テーブル ------------
+model auditTrail {
+  id         BigInt   @id @default(autoincrement())
+  tableName  String
+  recordId   BigInt
+  action     String
+  payloadHash String
+  prevHash   String?
+  userId     String
+  ipAddress  String
+  createdAt  DateTime @default(now())
+
+  @@index([tableName, recordId])
+}
+
+/// ------------ 正規化レコード用テーブル ------------
+model normalizedRecord {
+  id             Int     @id @default(autoincrement())
+  dataRecordId   BigInt
+  kpiId          Int
+  normalizedValue String
+  originalValue  String
+  createdAt      DateTime @default(now())
+
+  @@unique([dataRecordId, kpiId])
+}
+
 model csv_file_history {
   id                Int                 @id @default(autoincrement())
   uploadId          Int                 @unique

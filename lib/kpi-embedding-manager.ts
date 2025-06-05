@@ -132,51 +132,126 @@ export class KPIEmbeddingManager {
   ): Promise<KPIGroupMapping> {
     console.log(`🤖 KPI Group mapping for identifier: "${groupData.kpiIdentifier}"`);
     
-    // 1. KPIグループ用の拡張埋め込みテキスト生成
-    const embeddingText = this.createKPIGroupEmbeddingText(groupData);
-    
-    console.log(`🔍 Group embedding text: "${embeddingText}"`);
+    try {
+      // 1. GPT-4o-miniを使用したインテリジェント分析
+      const availableKPIs = this.dictionaryManager.getAll().map(kpi => kpi.name);
+      const embeddingText = this.createKPIGroupEmbeddingText(groupData);
+      
+      console.log(`🧠 Analyzing with GPT-4o-mini: "${embeddingText}"`);
+      
+      const gptAnalysis = await this.openaiClient.analyzeKPIMapping(embeddingText, availableKPIs);
+      console.log(`💡 GPT-4o-mini suggestion: ${gptAnalysis.suggestedKPI} (confidence: ${Math.round(gptAnalysis.confidence * 100)}%)`);
+      console.log(`📝 Reasoning: ${gptAnalysis.reasoning}`);
 
-    // 2. 埋め込み生成
-    const groupEmbedding = await this.openaiClient.generateEmbedding(embeddingText);
+      // 2. 従来の埋め込みベース検索
+      const groupEmbedding = await this.openaiClient.generateEmbedding(embeddingText);
+      const similarKPIs = await this.findSimilarKPIs(groupEmbedding, limit, threshold);
 
-    // 3. 類似度検索
-    const similarKPIs = await this.findSimilarKPIs(groupEmbedding, limit, threshold);
+      // 3. GPT-4o-miniの提案を考慮した結果の調整
+      let adjustedResults = similarKPIs.map(result => {
+        const adjustedSimilarity = this.calculateAdjustedConfidence(
+          result.similarity, 
+          groupData, 
+          result.kpi
+        );
+        
+        // GPT-4o-miniの提案が一致する場合はボーナス
+        if (gptAnalysis.suggestedKPI === result.kpi.name && gptAnalysis.confidence > 0.5) {
+          const gptBonus = gptAnalysis.confidence * 0.2; // 最大20%のボーナス
+          console.log(`🚀 GPT-4o-mini match bonus: +${Math.round(gptBonus * 100)}% for ${result.kpi.name}`);
+          return {
+            ...result,
+            similarity: Math.min(adjustedSimilarity + gptBonus, 1.0)
+          };
+        }
+        
+        return {
+          ...result,
+          similarity: adjustedSimilarity
+        };
+      });
 
-    // 4. 信頼度の調整計算
-    const adjustedResults = similarKPIs.map(result => {
-      const adjustedSimilarity = this.calculateAdjustedConfidence(
-        result.similarity, 
-        groupData, 
-        result.kpi
-      );
+      // 4. GPT-4o-miniが新しい提案をした場合の処理
+      if (gptAnalysis.suggestedKPI && gptAnalysis.confidence > 0.7) {
+        const suggestedKPI = this.dictionaryManager.getAll().find(kpi => kpi.name === gptAnalysis.suggestedKPI);
+        if (suggestedKPI && !adjustedResults.find(r => r.kpi.name === gptAnalysis.suggestedKPI)) {
+          console.log(`🌟 Adding GPT-4o-mini high-confidence suggestion: ${gptAnalysis.suggestedKPI}`);
+          adjustedResults.unshift({
+            kpi: suggestedKPI,
+            similarity: gptAnalysis.confidence,
+            distance: 1 - gptAnalysis.confidence,
+            embeddingText: `GPT-4o-mini suggestion: ${gptAnalysis.reasoning}`
+          });
+        }
+      }
+
+             // 5. 再ソート（調整後の信頼度で）
+       const sortedResults = adjustedResults.sort((a, b) => b.similarity - a.similarity);
+
+          const bestMatch = sortedResults.length > 0 ? sortedResults[0] : undefined;
+      const originalConfidence = similarKPIs.length > 0 ? similarKPIs[0].similarity : 0;
+      const adjustedConfidence = bestMatch?.similarity || 0;
+
+      // 6. 信頼度ボーストの詳細計算
+      const confidenceBoosts = this.calculateConfidenceBoosts(groupData, bestMatch?.kpi);
+
+      console.log(`✅ Best hybrid match: ${bestMatch?.kpi.name || 'None'} (original: ${Math.round(originalConfidence * 100)}%, adjusted: ${Math.round(adjustedConfidence * 100)}%)`);
+
       return {
-        ...result,
-        similarity: adjustedSimilarity
+        kpiIdentifier: groupData.kpiIdentifier,
+        groupData,
+        topMatches: sortedResults,
+        bestMatch,
+        adjustedConfidence,
+        originalConfidence,
+        confidenceBoosts
       };
-    });
-
-    // 5. 再ソート（調整後の信頼度で）
-    const sortedResults = adjustedResults.sort((a, b) => b.similarity - a.similarity);
-
-    const bestMatch = sortedResults.length > 0 ? sortedResults[0] : undefined;
-    const originalConfidence = similarKPIs.length > 0 ? similarKPIs[0].similarity : 0;
-    const adjustedConfidence = bestMatch?.similarity || 0;
-
-    // 6. 信頼度ボーストの詳細計算
-    const confidenceBoosts = this.calculateConfidenceBoosts(groupData, bestMatch?.kpi);
-
-    console.log(`✅ Best group match: ${bestMatch?.kpi.name || 'None'} (original: ${Math.round(originalConfidence * 100)}%, adjusted: ${Math.round(adjustedConfidence * 100)}%)`);
-
-    return {
-      kpiIdentifier: groupData.kpiIdentifier,
-      groupData,
-      topMatches: sortedResults,
-      bestMatch,
-      adjustedConfidence,
-      originalConfidence,
-      confidenceBoosts
-    };
+    } catch (error) {
+      console.error(`❌ Error in KPI group mapping for ${groupData.kpiIdentifier}:`, error);
+      
+      // フォールバック: 従来の埋め込みベース検索のみ
+      console.log(`🔄 Falling back to embedding-only search for ${groupData.kpiIdentifier}`);
+      
+      try {
+        const embeddingText = this.createKPIGroupEmbeddingText(groupData);
+        const groupEmbedding = await this.openaiClient.generateEmbedding(embeddingText);
+        const similarKPIs = await this.findSimilarKPIs(groupEmbedding, limit, threshold);
+        
+        const adjustedResults = similarKPIs.map(result => ({
+          ...result,
+          similarity: this.calculateAdjustedConfidence(result.similarity, groupData, result.kpi)
+        }));
+        
+        const sortedResults = adjustedResults.sort((a, b) => b.similarity - a.similarity);
+        const bestMatch = sortedResults.length > 0 ? sortedResults[0] : undefined;
+        const confidenceBoosts = this.calculateConfidenceBoosts(groupData, bestMatch?.kpi);
+        
+        console.log(`✅ Fallback match: ${bestMatch?.kpi.name || 'None'} (${Math.round((bestMatch?.similarity || 0) * 100)}%)`);
+        
+        return {
+          kpiIdentifier: groupData.kpiIdentifier,
+          groupData,
+          topMatches: sortedResults,
+          bestMatch,
+          adjustedConfidence: bestMatch?.similarity || 0,
+          originalConfidence: similarKPIs.length > 0 ? similarKPIs[0].similarity : 0,
+          confidenceBoosts
+        };
+      } catch (fallbackError) {
+        console.error(`❌ Fallback also failed for ${groupData.kpiIdentifier}:`, fallbackError);
+        
+        // 最後のフォールバック: 空の結果を返す
+        return {
+          kpiIdentifier: groupData.kpiIdentifier,
+          groupData,
+          topMatches: [],
+          bestMatch: undefined,
+          adjustedConfidence: 0,
+          originalConfidence: 0,
+          confidenceBoosts: { unitMatch: 0, dataQuality: 0, sampleSize: 0, valueRange: 0 }
+        };
+      }
+    }
   }
 
   /**
