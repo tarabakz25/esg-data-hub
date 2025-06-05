@@ -1,4 +1,4 @@
-import { prisma as db } from '../prisma';
+import { prisma } from '@/lib/prisma';
 
 export interface ProcessingResults {
   mappingResults: any;
@@ -75,7 +75,7 @@ export class CsvHistoryService {
   }> {
     try {
       // アップロード情報からファイル名を取得
-      const upload = await db.upload.findUnique({
+      const upload = await prisma.upload.findUnique({
         where: { id: uploadId },
         select: { filename: true }
       });
@@ -84,7 +84,7 @@ export class CsvHistoryService {
         throw new Error(`アップロード情報が見つかりません: Upload ID ${uploadId}`);
       }
 
-      const history = await db.csvFileHistory.create({
+      const history = await prisma.csvFileHistory.create({
         data: {
           uploadId,
           filename: upload.filename,
@@ -122,7 +122,7 @@ export class CsvHistoryService {
     }
   ): Promise<void> {
     try {
-      await db.csvFileHistory.updateMany({
+      await prisma.csvFileHistory.updateMany({
         where: { uploadId: uploadId },
         data: {
           processingStatus: results.status || (results.errorDetails ? 'ERROR' : 'COMPLETED'),
@@ -166,7 +166,7 @@ export class CsvHistoryService {
       const offset = (page - 1) * limit;
 
       const [files, total] = await Promise.all([
-        db.csvFileHistory.findMany({
+        prisma.csvFileHistory.findMany({
           orderBy: { uploadedAt: 'desc' }, // 最新が上（降順）
           skip: offset,
           take: limit,
@@ -181,7 +181,7 @@ export class CsvHistoryService {
             processingTimeMs: true
           }
         }),
-        db.csvFileHistory.count()
+        prisma.csvFileHistory.count()
       ]);
 
       const totalPages = Math.ceil(total / limit);
@@ -221,7 +221,7 @@ export class CsvHistoryService {
   static async getFileDetails(fileId: number): Promise<FileDetailsResponse> {
     try {
       // 基本履歴情報を取得
-      const history = await db.csvFileHistory.findUnique({
+      const history = await prisma.csvFileHistory.findUnique({
         where: { id: fileId },
         include: {
           contributions: {
@@ -348,7 +348,7 @@ export class CsvHistoryService {
    */
   static async deleteFile(fileId: number): Promise<void> {
     try {
-      await db.$transaction(async (tx: any) => {
+      await prisma.$transaction(async (tx: any) => {
         // 累積KPIから貢献度を削除
         const contributions = await tx.kpiContribution.findMany({
           where: { csvFileHistoryId: fileId },
@@ -406,7 +406,7 @@ export class CsvHistoryService {
   }> {
     try {
       const [files, stats] = await Promise.all([
-        db.csvFileHistory.findMany({
+        prisma.csvFileHistory.findMany({
           select: {
             processingStatus: true,
             processingTimeMs: true,
@@ -414,7 +414,7 @@ export class CsvHistoryService {
             processedRecords: true
           }
         }),
-        db.csvFileHistory.aggregate({
+        prisma.csvFileHistory.aggregate({
           _count: true,
           _sum: {
             detectedKpis: true,

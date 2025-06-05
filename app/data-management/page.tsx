@@ -14,127 +14,143 @@ interface UploadRecord {
   filename: string;
   uploadedBy: string;
   uploadedAt: string;
-  status: 'COMPLETED' | 'PROCESSING' | 'ERROR' | 'PENDING';
+  status: 'parsed' | 'errored' | 'COMPLETED' | 'PROCESSING' | 'ERROR' | 'PENDING';
   statusColor: string;
   source: string;
   uploadId?: number;
 }
 
-interface DataStats {
-  totalFiles: number;
-  totalDataSources: number;
+interface ProcessingStats {
+  totalUploads: number;
   processingFiles: number;
-  monthlyGrowth: number;
+  completedFiles: number;
+  errorFiles: number;
+  avgProcessingTimeMs: number;
 }
 
-interface ApiError {
-  error: string;
-  details?: string;
-}
+// Prismaスキーマの正しいステータス値に対応
+const mapStatus = (status: string): string => {
+  switch (status) {
+    case 'parsed':
+      return '解析済み';
+    case 'errored':
+      return 'エラー';
+    case 'COMPLETED':
+      return '完了';
+    case 'PROCESSING':
+      return '処理中';
+    case 'ERROR':
+      return 'エラー';
+    case 'PENDING':
+      return '待機中';
+    default:
+      return status;
+  }
+};
+
+const getStatusColor = (status: string): string => {
+  switch (status) {
+    case 'parsed':
+    case 'COMPLETED':
+      return 'green';
+    case 'PROCESSING':
+    case 'PENDING':
+      return 'yellow';
+    case 'errored':
+    case 'ERROR':
+      return 'red';
+    default:
+      return 'gray';
+  }
+};
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'parsed':
+    case 'COMPLETED':
+      return <CheckCircle className="w-4 h-4" />;
+    case 'PROCESSING':
+      return <Loader2 className="w-4 h-4 animate-spin" />;
+    case 'PENDING':
+      return <Clock className="w-4 h-4" />;
+    case 'errored':
+    case 'ERROR':
+      return <AlertCircle className="w-4 h-4" />;
+    default:
+      return <Activity className="w-4 h-4" />;
+  }
+};
 
 export default function DataManagementPage() {
-  const router = useRouter();
   const [recentUploads, setRecentUploads] = useState<UploadRecord[]>([]);
-  const [dataStats, setDataStats] = useState<DataStats>({
-    totalFiles: 0,
-    totalDataSources: 0,
+  const [processingStats, setProcessingStats] = useState<ProcessingStats>({
+    totalUploads: 0,
     processingFiles: 0,
-    monthlyGrowth: 0
+    completedFiles: 0,
+    errorFiles: 0,
+    avgProcessingTimeMs: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  // データ統計とアップロード履歴を取得
+  // データ取得
   const fetchData = async () => {
+    setError(null);
     try {
-      setIsLoading(true);
-      setError(null);
-
-      // 並列でデータを取得してパフォーマンスを向上
-      const [fileHistoryResponse, statsResponse] = await Promise.all([
-        fetch('/api/dashboard/file-history', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }),
-        fetch('/api/catalog/stats', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      ]);
-
-      // ファイル履歴の処理
-      if (fileHistoryResponse.ok) {
-        const fileHistoryData = await fileHistoryResponse.json();
+      // アップロード履歴を取得（uploadテーブルから）
+      const uploadsResponse = await fetch('/api/dashboard/file-history');
+      
+      if (uploadsResponse.ok) {
+        const uploadsData = await uploadsResponse.json();
         
-        // APIレスポンスを内部形式に変換
-        const uploads: UploadRecord[] = fileHistoryData.files?.map((file: any) => ({
-          id: file.id,
+        // データの正規化
+        const normalizedUploads = (uploadsData.files || []).map((file: any) => ({
+          id: file.id || file.uploadId,
           filename: file.filename,
-          uploadedBy: file.uploadedBy || 'システム',
-          uploadedAt: new Date(file.uploadedAt).toLocaleString('ja-JP'),
-          status: file.processingStatus || 'PENDING',
-          statusColor: getStatusColor(file.processingStatus),
-          source: getSourceType(file.filename),
+          uploadedBy: 'システムユーザー',
+          uploadedAt: file.uploadedAt,
+          status: file.processingStatus || 'parsed', // ProcessingStatusを使用
+          statusColor: getStatusColor(file.processingStatus || 'parsed'),
+          source: 'CSV Import',
           uploadId: file.uploadId
-        })) || [];
+        }));
 
-        setRecentUploads(uploads);
-      } else {
-        console.warn('ファイル履歴の取得に失敗しました');
-      }
+        setRecentUploads(normalizedUploads);
 
-      // 統計データの処理
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setDataStats({
-          totalFiles: statsData.totalDataSources || 0,
-          totalDataSources: statsData.totalKpis || 0,
-          processingFiles: recentUploads.filter(u => u.status === 'PROCESSING').length,
-          monthlyGrowth: statsData.recentGrowth || 0
+        // 統計情報の計算
+        const stats = normalizedUploads.reduce((acc: ProcessingStats, upload) => {
+          acc.totalUploads++;
+          switch (upload.status) {
+            case 'COMPLETED':
+              acc.completedFiles++;
+              break;
+            case 'PROCESSING':
+              acc.processingFiles++;
+              break;
+            case 'ERROR':
+            case 'errored':
+              acc.errorFiles++;
+              break;
+          }
+          return acc;
+        }, {
+          totalUploads: 0,
+          processingFiles: 0,
+          completedFiles: 0,
+          errorFiles: 0,
+          avgProcessingTimeMs: 5000 // 仮の値
         });
-      } else {
-        console.warn('統計データの取得に失敗しました');
-      }
 
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '不明なエラーが発生しました';
-      setError(errorMessage);
-      console.error('データ取得エラー:', err);
+        setProcessingStats(stats);
+      } else {
+        throw new Error('アップロード履歴の取得に失敗しました');
+      }
+    } catch (error) {
+      console.error('データ取得エラー:', error);
+      setError(error instanceof Error ? error.message : 'データの取得に失敗しました');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // ステータスに応じた色を決定
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'COMPLETED': return 'green';
-      case 'PROCESSING': return 'yellow';
-      case 'ERROR': return 'red';
-      default: return 'gray';
-    }
-  };
-
-  // ファイル名からソースタイプを推定
-  const getSourceType = (filename: string): string => {
-    if (filename.toLowerCase().includes('csv')) return 'CSV アップロード';
-    if (filename.toLowerCase().includes('excel') || filename.toLowerCase().includes('xlsx')) return 'Excel アップロード';
-    if (filename.toLowerCase().includes('erp')) return 'ERPシステム';
-    if (filename.toLowerCase().includes('bi')) return 'BIツール';
-    return 'CSV アップロード';
-  };
-
-  // ステータスアイコンを取得
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'COMPLETED': return <CheckCircle className="w-4 h-4" />;
-      case 'PROCESSING': return <Clock className="w-4 h-4" />;
-      case 'ERROR': return <AlertCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
     }
   };
 
@@ -174,80 +190,119 @@ export default function DataManagementPage() {
     );
   }
 
+  // エラー状態
+  if (error && recentUploads.length === 0) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">データ取得エラー</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button onClick={fetchData} className="bg-emerald-600 hover:bg-emerald-700">
+              再試行
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="p-6 space-y-6 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center">
-                <Activity className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">データ管理</h1>
-                <p className="text-gray-600">
-                  ESGデータのインポート、検証プロセス、データ品質監視を管理します。
-                </p>
-              </div>
-            </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">データ管理</h1>
+            <p className="text-gray-600 mt-2">
+              ESGデータの取り込み、管理、分析を行います
+            </p>
+          </div>
+          <div className="flex items-center space-x-3">
             <Button 
-              onClick={fetchData}
+              onClick={fetchData} 
               variant="outline" 
-              size="sm"
-              disabled={isLoading}
               className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+              disabled={isLoading}
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
-                <Download className="w-4 h-4 mr-2" />
+                <Activity className="w-4 h-4 mr-2" />
               )}
               更新
             </Button>
           </div>
-          
-          {/* エラー表示 */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center">
-                <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-                <span className="text-red-700 font-medium">エラーが発生しました</span>
-              </div>
-              <p className="text-red-600 text-sm mt-1">{error}</p>
-            </div>
-          )}
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-emerald-800 text-lg">総ファイル数</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-emerald-900">{dataStats.totalFiles}</div>
-              <p className="text-xs text-emerald-600 mt-1">今月 +{dataStats.monthlyGrowth}</p>
+        {/* エラー表示（部分エラー） */}
+        {error && recentUploads.length > 0 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 text-yellow-600 mr-2" />
+              <p className="text-yellow-800">
+                データ更新中にエラーが発生しました: {error}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="border-gray-200 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <FileText className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">総ファイル数</p>
+                  <p className="text-2xl font-bold text-gray-900">{processingStats.totalUploads}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
-          
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-blue-800 text-lg">データソース</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-900">{dataStats.totalDataSources}</div>
-              <p className="text-xs text-blue-600 mt-1">接続済みシステム</p>
+
+          <Card className="border-gray-200 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <Clock className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">処理中</p>
+                  <p className="text-2xl font-bold text-gray-900">{processingStats.processingFiles}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
-          
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-purple-800 text-lg">処理中</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-900">{dataStats.processingFiles}</div>
-              <p className="text-xs text-purple-600 mt-1">待機中のファイル</p>
+
+          <Card className="border-gray-200 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">完了済み</p>
+                  <p className="text-2xl font-bold text-gray-900">{processingStats.completedFiles}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-gray-200 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-red-100 rounded-lg">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">エラー</p>
+                  <p className="text-2xl font-bold text-gray-900">{processingStats.errorFiles}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -287,45 +342,42 @@ export default function DataManagementPage() {
         {/* Recent Uploads Section */}
         <Card className="border-gray-200 shadow-lg">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-200">
-            <CardTitle className="text-xl text-gray-800">最近のアップロード</CardTitle>
+            <CardTitle className="text-xl text-gray-800 flex items-center">
+              <FileText className="w-5 h-5 mr-2 text-blue-600" />
+              最近のアップロード
+            </CardTitle>
             <CardDescription>
-              最新のデータアップロードとその処理ステータスを監視します
+              最新のファイルアップロード履歴と処理状況
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="pt-6">
             {recentUploads.length > 0 ? (
               <Table>
-                <TableHeader className="bg-gray-50">
-                  <TableRow className="border-b border-gray-200">
-                    <TableHead className="font-semibold text-gray-700">ファイル名</TableHead>
-                    <TableHead className="font-semibold text-gray-700">ソース</TableHead>
-                    <TableHead className="font-semibold text-gray-700">アップロード者</TableHead>
-                    <TableHead className="font-semibold text-gray-700">日時</TableHead>
-                    <TableHead className="font-semibold text-gray-700">ステータス</TableHead>
-                    <TableHead className="font-semibold text-gray-700">アクション</TableHead>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[40%]">ファイル名</TableHead>
+                    <TableHead className="w-[20%]">アップロード日時</TableHead>
+                    <TableHead className="w-[15%]">ステータス</TableHead>
+                    <TableHead className="w-[25%]">アクション</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentUploads.map((upload) => (
-                    <TableRow key={upload.id} className="hover:bg-gray-50 transition-colors">
-                      <TableCell className="font-medium text-gray-900">
-                        <div className="flex items-center space-x-2">
-                          <FileText className="w-4 h-4 text-gray-500" />
-                          <span className="truncate max-w-xs" title={upload.filename}>
-                            {upload.filename}
-                          </span>
+                    <TableRow key={upload.id} className="hover:bg-gray-50">
+                      <TableCell className="font-medium">
+                        <div>
+                          <p className="text-gray-900">{upload.filename}</p>
+                          <p className="text-sm text-gray-500">{upload.source}</p>
                         </div>
                       </TableCell>
                       <TableCell className="text-gray-600">
-                        <Badge variant="outline" className="text-xs">
-                          {upload.source}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-gray-600">
-                        {upload.uploadedBy}
-                      </TableCell>
-                      <TableCell className="text-gray-600 text-sm">
-                        {upload.uploadedAt}
+                        {new Date(upload.uploadedAt).toLocaleString('ja-JP', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </TableCell>
                       <TableCell>
                         <Badge 
@@ -341,7 +393,7 @@ export default function DataManagementPage() {
                           }`}
                         >
                           {getStatusIcon(upload.status)}
-                          <span>{upload.status}</span>
+                          <span>{mapStatus(upload.status)}</span>
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -360,7 +412,7 @@ export default function DataManagementPage() {
                             size="sm" 
                             className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-100"
                             title="ダウンロード"
-                            disabled={upload.status !== 'COMPLETED'}
+                            disabled={upload.status !== 'COMPLETED' && upload.status !== 'parsed'}
                           >
                             <Download className="w-4 h-4" />
                           </Button>

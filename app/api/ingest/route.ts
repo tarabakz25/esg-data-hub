@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
         filename: file.name,
         s3Key: s3Key,
         userId: userId,
-        status: 'uploaded',
+        status: 'parsed',
         createdAt: new Date(),
       },
     });
