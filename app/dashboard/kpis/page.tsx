@@ -1,14 +1,12 @@
 'use client'
 
 import KpiTable from '@/components/kpi/KpiTable'
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartBarIcon } from '@heroicons/react/24/outline';
 
 export default function KpisPage() {
   return (
-    <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
         <PageHeader
@@ -30,6 +28,5 @@ export default function KpisPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 } 

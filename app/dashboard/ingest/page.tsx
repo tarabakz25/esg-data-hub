@@ -1,14 +1,12 @@
 'use client'
 
 import UploadForm from '@/components/upload/UploadForm'
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 
 export default function IngestPage() {
   return (
-    <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
         <PageHeader
@@ -30,6 +28,5 @@ export default function IngestPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 } 

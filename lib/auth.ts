@@ -6,6 +6,7 @@ import prisma from "@/lib/utils/db"
 import { UserRole, ROLE_PERMISSIONS } from "@/types/auth"
 import type { JWT } from "next-auth/jwt"
 import type { Session, User } from "next-auth"
+import bcrypt from "bcryptjs"
 
 // 拡張したセッション型を定義
 interface ExtendedSession extends Session {
@@ -34,43 +35,39 @@ export const authConfig: AuthOptions = {
           return null
         }
 
-        // 本来はbcryptでパスワードハッシュを検証
-        // 今回は簡易実装として固定ユーザー
-        const mockUsers = [
-          {
-            id: "1",
-            email: "admin@example.com",
-            name: "管理者",
-            role: "admin" as UserRole,
-            department: "IT",
-          },
-          {
-            id: "2", 
-            email: "ir@example.com",
-            name: "IR担当者",
-            role: "ir_manager" as UserRole,
-            department: "IR",
-          },
-          {
-            id: "3",
-            email: "auditor@example.com", 
-            name: "監査担当者",
-            role: "auditor" as UserRole,
-            department: "監査室",
-          }
-        ]
+        try {
+          // データベースからユーザーを検索
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          })
 
-        const user = mockUsers.find(u => u.email === credentials.email)
-        if (user && credentials.password === "password") {
+          if (!user) {
+            return null
+          }
+
+          // パスワードの検証
+          // 注意: この実装では、Userテーブルにpasswordとrole、departmentフィールドが必要です
+          // 本番環境ではパスワードはbcryptでハッシュ化して保存する必要があります
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password, 
+            user.password || ""
+          )
+
+          if (!isPasswordValid) {
+            return null
+          }
+
           return {
-            id: user.id,
+            id: user.id.toString(),
             email: user.email,
             name: user.name,
-            role: user.role,
-            department: user.department,
+            role: user.role as UserRole || "viewer",
+            department: user.department || "",
           }
+        } catch (error) {
+          console.error("認証エラー:", error)
+          return null
         }
-        return null
       }
     })
   ],
@@ -149,4 +146,25 @@ export function hasPermission(
       (permission.resource === "*" || permission.resource === resource) &&
       permission.action === action
   )
+}
+
+// ユーザー作成用ヘルパー関数（管理者用）
+export async function createUser(userData: {
+  email: string
+  name: string
+  password: string
+  role: UserRole
+  department?: string
+}) {
+  const hashedPassword = await bcrypt.hash(userData.password, 12)
+  
+  return await prisma.user.create({
+    data: {
+      email: userData.email,
+      name: userData.name,
+      password: hashedPassword,
+      role: userData.role,
+      department: userData.department || "",
+    }
+  })
 } 

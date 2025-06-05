@@ -16,8 +16,7 @@ export class OpenAIEmbeddingClient {
     this.client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
-    // OpenAI の text-embedding-ada-002 を直接使用
-    this.model = "text-embedding-ada-002";
+    this.model = "gpt-4o-mini-2024-07-18";
   }
 
   async generateEmbedding(text: string): Promise<number[]> {

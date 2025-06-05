@@ -3,7 +3,7 @@ import { gql } from 'apollo-server-micro';
 export const typeDefs = gql`
   # カタログの基本型定義
   type KPI {
-    id: Int!
+    id: String!
     code: String!
     displayName: String!
     baseUnit: String!
@@ -74,7 +74,7 @@ export const typeDefs = gql`
     unit: String
     page: Int = 1
     limit: Int = 20
-    sortBy: KPISortField = RELEVANCE
+    sortBy: KPISortField = NAME
     sortOrder: SortOrder = DESC
   }
 
@@ -91,7 +91,6 @@ export const typeDefs = gql`
     NAME
     CODE
     CREATED_AT
-    RELEVANCE
   }
 
   enum DataSourceSortField {
@@ -108,7 +107,7 @@ export const typeDefs = gql`
   type Query {
     # KPI関連
     searchKPIs(input: KPISearchInput!): KPIConnection!
-    getKPI(id: Int!): KPI
+    getKPI(id: String!): KPI
     
     # データソース関連
     searchDataSources(input: DataSourceSearchInput!): DataSourceConnection!

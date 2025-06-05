@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     if (department) where.department = department;
     if (isRequired !== null) where.isRequired = isRequired === 'true';
 
-    const requirements = await prisma.kPIRequirement.findMany({
+    const requirements = await prisma.kpiRequirement.findMany({
       where,
       orderBy: [
         { regulation: 'asc' },
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = kpiRequirementSchema.parse(body);
 
-    const requirement = await prisma.kPIRequirement.create({
+    const requirement = await prisma.kpiRequirement.create({
       data: {
         ...validatedData,
         dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
@@ -115,9 +115,9 @@ export async function PUT(request: NextRequest) {
     });
 
     // 既存の要件を削除してから一括作成
-    await prisma.kPIRequirement.deleteMany({});
+    await prisma.kpiRequirement.deleteMany({});
     
-    const created = await prisma.kPIRequirement.createMany({
+    const created = await prisma.kpiRequirement.createMany({
       data: validatedRequirements,
     });
 

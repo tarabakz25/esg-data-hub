@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
           id: defaultUserId,
           email: 'system@esg-data-hub.com',
           name: 'System User',
+          password: null, // パスワードフィールドを明示的にnullに設定
         }
       });
       defaultUserId = defaultUser.id;

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       unit: searchParams.get('unit') || undefined,
       page: parseInt(searchParams.get('page') || '1'),
       limit: parseInt(searchParams.get('limit') || '20'),
-      sortBy: searchParams.get('sortBy') as any || 'relevance',
+      sortBy: searchParams.get('sortBy') as any || 'name',
       sortOrder: searchParams.get('sortOrder') as any || 'desc',
     };
 

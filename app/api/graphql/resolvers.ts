@@ -13,7 +13,7 @@ function convertKPISearchInput(input: any): KPISearchQuery {
     unit: input.unit,
     page: input.page || 1,
     limit: input.limit || 20,
-    sortBy: input.sortBy?.toLowerCase() || 'relevance',
+    sortBy: input.sortBy?.toLowerCase() || 'name',
     sortOrder: input.sortOrder?.toLowerCase() || 'desc',
   };
 }
@@ -47,7 +47,7 @@ export const resolvers = {
     },
 
     // 単一KPI取得
-    getKPI: async (_parent: any, { id }: { id: number }) => {
+    getKPI: async (_parent: any, { id }: { id: string }) => {
       const result = await CatalogService.getKPIDetail(id);
       
       if (!result.success) {

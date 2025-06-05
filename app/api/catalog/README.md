@@ -24,7 +24,7 @@ KPIを検索します。
 - `unit` (string, optional): 単位で絞り込み
 - `page` (number, default: 1): ページ番号
 - `limit` (number, default: 20, max: 100): 取得件数
-- `sortBy` (string, default: 'relevance'): ソート基準 (name, code, createdAt, relevance)
+- `sortBy` (string, default: 'name'): ソート基準 (name, code, createdAt)
 - `sortOrder` (string, default: 'desc'): ソート順 (asc, desc)
 
 **レスポンス例:**

@@ -34,9 +34,9 @@ function parseGraphQLQuery(query: string): any {
   }
   
   if (trimmed.includes('getKPI')) {
-    const match = trimmed.match(/getKPI\s*\(\s*id:\s*(\d+)\s*\)/);
+    const match = trimmed.match(/getKPI\s*\(\s*id:\s*"([^"]*)"\s*\)/) || trimmed.match(/getKPI\s*\(\s*id:\s*(\w+)\s*\)/);
     if (match) {
-      return { type: 'getKPI', id: parseInt(match[1]) };
+      return { type: 'getKPI', id: match[1] };
     }
   }
   
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
           regulation: parsedQuery.input.regulation,
           page: parsedQuery.input.page || 1,
           limit: parsedQuery.input.limit || 20,
-          sortBy: 'relevance',
+          sortBy: 'name',
           sortOrder: 'desc',
         };
         const kpiResult = await CatalogService.searchKPIs(kpiQuery);

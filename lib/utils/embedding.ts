@@ -6,7 +6,7 @@ const openai = new OpenAI({
 
 export async function embedText(text: string): Promise<number[]> {
   const response = await openai.embeddings.create({
-    model: "text-embedding-ada-002",
+    model: "gpt-4o-mini-2024-07-18",
     input: text,
   })
   return response.data[0].embedding
