@@ -16,7 +16,7 @@ export class CatalogService {
    */
   static async searchKPIs(query: KPISearchQuery): Promise<ApiResponse<KPIDetail[]>> {
     try {
-      const { q, regulation, category, unit, page, limit, sortBy, sortOrder } = query;
+      const { q, category, regulation, page, limit, sortBy, sortOrder } = query;
       const skip = (page - 1) * limit;
 
       // WHERE条件を構築
@@ -24,72 +24,47 @@ export class CatalogService {
       
       if (q) {
         where.OR = [
-          { displayName: { contains: q, mode: 'insensitive' } },
-          { code: { contains: q, mode: 'insensitive' } },
+          { name: { contains: q, mode: 'insensitive' } },
+          { id: { contains: q, mode: 'insensitive' } },
         ];
-      }
-
-      if (unit) {
-        where.baseUnit = { contains: unit, mode: 'insensitive' };
       }
 
       // 並び順を構築
       let orderBy: any = {};
       switch (sortBy) {
-        case 'name':
-          orderBy = { displayName: sortOrder };
-          break;
         case 'code':
-          orderBy = { code: sortOrder };
+          orderBy = { id: sortOrder };
+          break;
+        case 'name':
+          orderBy = { name: sortOrder };
           break;
         case 'createdAt':
-          orderBy = { id: sortOrder }; // KPIテーブルにcreatedAtがないためidで代用
+          orderBy = { createdAt: sortOrder };
           break;
-        case 'relevance':
         default:
-          orderBy = { displayName: 'asc' };
+          orderBy = { name: 'asc' };
           break;
       }
 
       // KPIを取得
       const [kpis, total] = await Promise.all([
-        prisma.kPI.findMany({
+        prisma.kpi.findMany({
           where,
           skip,
           take: limit,
           orderBy,
         }),
-        prisma.kPI.count({ where }),
+        prisma.kpi.count({ where }),
       ]);
 
       // 詳細情報を追加
-      const kpiDetails: KPIDetail[] = await Promise.all(
-        kpis.map(async (kpi) => {
-          const requirements = regulation 
-            ? await prisma.kPIRequirement.findMany({
-                where: { 
-                  kpiId: kpi.id,
-                  regulation: regulation 
-                },
-              })
-            : await prisma.kPIRequirement.findMany({
-                where: { kpiId: kpi.id },
-              });
-
-          return {
-            id: kpi.id,
-            code: kpi.code,
-            displayName: kpi.displayName,
-            baseUnit: kpi.baseUnit,
-            requirements: requirements.map(req => ({
-              regulation: req.regulation,
-              isRequired: req.isRequired,
-              dueDate: req.dueDate || undefined,
-              department: req.department || undefined,
-            })),
-          };
-        })
-      );
+      const kpiDetails: KPIDetail[] = kpis.map((kpi) => ({
+        id: kpi.id,
+        code: kpi.id,
+        displayName: kpi.name,
+        baseUnit: kpi.unit,
+        requirements: [], // 現在のスキーマでは要件情報が別途管理されていない
+      }));
 
       return {
         success: true,
@@ -123,8 +98,7 @@ export class CatalogService {
       
       if (q) {
         where.OR = [
-          { name: { contains: q, mode: 'insensitive' } },
-          { description: { contains: q, mode: 'insensitive' } },
+          { uri: { contains: q, mode: 'insensitive' } },
         ];
       }
 
@@ -132,33 +106,33 @@ export class CatalogService {
       let orderBy: any = {};
       switch (sortBy) {
         case 'name':
-          orderBy = { name: sortOrder };
+          orderBy = { uri: sortOrder };
           break;
         case 'createdAt':
-          orderBy = { createdAt: sortOrder };
+          orderBy = { uploadedAt: sortOrder };
           break;
         default:
-          orderBy = { name: 'asc' };
+          orderBy = { uri: 'asc' };
           break;
       }
 
       // データソースを取得
       const [dataSources, total] = await Promise.all([
-        prisma.dataSource.findMany({
+        prisma.source.findMany({
           where,
           skip,
           take: limit,
           orderBy,
         }),
-        prisma.dataSource.count({ where }),
+        prisma.source.count({ where }),
       ]);
 
       const dataSourceDetails: DataSourceDetail[] = dataSources.map(ds => ({
         id: ds.id,
-        name: ds.name,
-        description: ds.description || undefined,
-        createdAt: ds.createdAt,
-        updatedAt: ds.updatedAt,
+        name: ds.uri,
+        description: undefined,
+        createdAt: ds.uploadedAt,
+        updatedAt: ds.uploadedAt,
       }));
 
       return {
@@ -192,18 +166,13 @@ export class CatalogService {
         missingKPIs,
         recentAlerts,
       ] = await Promise.all([
-        prisma.kPI.count(),
-        prisma.dataSource.count(),
-        prisma.dataRecord.count(),
-        prisma.kPIRequirement.count({
-          where: { 
-            isRequired: true,
-            // 関連するKPIにデータがない場合を計算（簡略化）
-          },
-        }),
-        prisma.alertLog.count({
+        prisma.kpi.count(),
+        prisma.source.count(),
+        prisma.dataRow.count(),
+        prisma.missingKpi.count(),
+        prisma.notification.count({
           where: {
-            sentAt: {
+            createdAt: {
               gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 過去7日
             },
           },
@@ -211,11 +180,12 @@ export class CatalogService {
       ]);
 
       // コンプライアンス率を計算（簡略化）
-      const requiredKPIs = await prisma.kPIRequirement.count({
-        where: { isRequired: true },
+      const totalChecks = await prisma.complianceCheckResult.count();
+      const passedChecks = await prisma.complianceCheckResult.count({
+        where: { status: 'compliant' },
       });
-      const complianceRate = requiredKPIs > 0 
-        ? Math.max(0, ((requiredKPIs - missingKPIs) / requiredKPIs) * 100)
+      const complianceRate = totalChecks > 0 
+        ? Math.round((passedChecks / totalChecks) * 100)
         : 100;
 
       const stats: CatalogStats = {
@@ -224,7 +194,7 @@ export class CatalogService {
         totalRecords: Number(totalRecords),
         missingKPIs,
         recentAlerts,
-        complianceRate: Math.round(complianceRate),
+        complianceRate,
       };
 
       return {
@@ -243,9 +213,9 @@ export class CatalogService {
   /**
    * 特定のKPIの詳細情報を取得する
    */
-  static async getKPIDetail(id: number): Promise<ApiResponse<KPIDetail>> {
+  static async getKPIDetail(id: string): Promise<ApiResponse<KPIDetail>> {
     try {
-      const kpi = await prisma.kPI.findUnique({
+      const kpi = await prisma.kpi.findUnique({
         where: { id },
       });
 
@@ -256,21 +226,13 @@ export class CatalogService {
         };
       }
 
-      const requirements = await prisma.kPIRequirement.findMany({
-        where: { kpiId: id },
-      });
-
+      // KPI要件の情報を取得（現在のスキーマに合わせて調整）
       const kpiDetail: KPIDetail = {
         id: kpi.id,
-        code: kpi.code,
-        displayName: kpi.displayName,
-        baseUnit: kpi.baseUnit,
-        requirements: requirements.map(req => ({
-          regulation: req.regulation,
-          isRequired: req.isRequired,
-          dueDate: req.dueDate || undefined,
-          department: req.department || undefined,
-        })),
+        code: kpi.id, // id をコードとして使用
+        displayName: kpi.name,
+        baseUnit: kpi.unit,
+        requirements: [], // 現在のスキーマでは要件情報が別途管理されていない
       };
 
       return {
@@ -291,7 +253,7 @@ export class CatalogService {
    */
   static async getDataSourceDetail(id: number): Promise<ApiResponse<DataSourceDetail>> {
     try {
-      const dataSource = await prisma.dataSource.findUnique({
+      const dataSource = await prisma.source.findUnique({
         where: { id },
       });
 
@@ -304,10 +266,10 @@ export class CatalogService {
 
       const dataSourceDetail: DataSourceDetail = {
         id: dataSource.id,
-        name: dataSource.name,
-        description: dataSource.description || undefined,
-        createdAt: dataSource.createdAt,
-        updatedAt: dataSource.updatedAt,
+        name: dataSource.uri, // uriをnameとして使用
+        description: undefined, // 現在のスキーマにdescriptionフィールドがない
+        createdAt: dataSource.uploadedAt,
+        updatedAt: dataSource.uploadedAt, // updatedAtフィールドがないのでuploadedAtを使用
       };
 
       return {

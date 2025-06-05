@@ -1,138 +1,12 @@
 generator client {
   provider        = "prisma-client-js"
-  // output          = "../generated/prisma"
   previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  extensions = [pgvector(map: "vector")]
-}
-
-// データソースを管理するモデル
-// CSVファイル、API、ERPシステムなど、データの送信元を記録
-model DataSource {
-  id Int @id @default(autoincrement())
-  name String @unique
-  description String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([name])
-}
-
-// 生のデータレコードを保存するモデル
-// 各データソースから取得した生データを保持
-model DataRecord {
-  id BigInt @id @default(autoincrement())
-  dataRecordId BigInt
-}
-
-// KPI（重要業績評価指標）を定義するモデル
-// ESG関連の指標（CO2排出量など）の定義と単位を管理
-model KPI {
-  id Int @id @default(autoincrement())
-  code String @unique
-  displayName String
-  baseUnit String
-  embedding Unsupported("vector(1536)") // OpenAI ada-002用の埋め込み（1536次元）
-}
-
-// データレコードとKPIのマッピングルールを管理するモデル
-// 生データを適切なKPIに紐付けるためのルールを保存
-model MappingRule {
-  id Int @id @default(autoincrement())
-  dataRecordId BigInt
-  kpiId Int
-  mappingRuleId BigInt
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([dataRecordId])
-  @@index([kpiId])
-}
-
-// 監査証跡を記録するモデル
-// データの変更履歴をブロックチェーン形式で保持
-model AuditTrail {
-  id BigInt @id @default(autoincrement())
-  tableName String
-  recordId BigInt
-  action String
-  payloadHash String
-  prevHash String?
-  userId String
-  ipAddress String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([tableName, recordId])
-  @@index([createdAt])
-}
-
-// 正規化されたデータレコードを保存するモデル
-// 生データを適切なKPIに紐付けて正規化した結果を保持
-model NormalizedRecord {
-  id BigInt @id @default(autoincrement())
-  dataRecordId BigInt
-  kpiId Int
-  normalizedValue String
-  originalValue String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([dataRecordId])
-  @@index([kpiId])
-  @@index([createdAt])
-}
-
-// ワークフロータスクを管理するモデル
-// データ承認フローの各ステップを定義
-model WorkflowTask {
-  id Int @id @default(autoincrement())
-  name String @unique
-  description String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([name])
-}
-
-// KPI要件を管理するモデル
-// どのKPIが必須か、期日はいつかを定義
-model KPIRequirement {
-  id Int @id @default(autoincrement())
-  kpiId Int
-  regulation String // ISSB, CSRD, etc.
-  isRequired Boolean @default(true)
-  dueDate DateTime? // 提出期限
-  department String? // 担当部門
-  description String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([kpiId, regulation])
-  @@index([regulation, isRequired])
-}
-
-// アラートログを管理するモデル
-// KPI欠損や期日遅れの通知履歴を記録
-model AlertLog {
-  id BigInt @id @default(autoincrement())
-  alertType String // "missing_kpi", "due_date_approaching", "overdue"
-  kpiId Int?
-  regulation String?
-  department String?
-  message String
-  status String @default("sent") // "sent", "acknowledged", "resolved"
-  sentAt DateTime @default(now())
-  acknowledgedAt DateTime?
-  resolvedAt DateTime?
-  slackMessageTs String? // Slack message timestamp for threading
-
-  @@index([alertType, status])
-  @@index([sentAt])
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model Kpi {
@@ -183,16 +57,17 @@ model Source {
 }
 
 model Upload {
-  id        Int          @id @default(autoincrement())
-  filename  String
-  s3Key     String       @unique
-  status    UploadStatus @default(parsed)
-  userId    Int
-  createdAt DateTime     @default(now())
-  sourceId  Int?
-  rows      DataRow[]
-  source    Source?      @relation(fields: [sourceId], references: [id])
-  user      User         @relation(fields: [userId], references: [id])
+  id               Int               @id @default(autoincrement())
+  filename         String
+  s3Key            String            @unique
+  status           UploadStatus      @default(parsed)
+  userId           Int
+  createdAt        DateTime          @default(now())
+  sourceId         Int?
+  rows             DataRow[]
+  source           Source?           @relation(fields: [sourceId], references: [id])
+  user             User              @relation(fields: [userId], references: [id])
+  csv_file_history csv_file_history?
 }
 
 model DataRow {
@@ -258,24 +133,94 @@ model MissingKpi {
 
 /// ------------ 通知システム用テーブル ------------
 model Notification {
-  id                      String               @id @default(cuid())
+  id                      String                 @id @default(cuid())
   type                    NotificationType
   priority                NotificationPriority
   title                   String
   message                 String
   severity                ComplianceSeverity?
-  isRead                  Boolean              @default(false)
+  isRead                  Boolean                @default(false)
   actionUrl               String?
   complianceCheckResultId String?
   userId                  Int?
-  createdAt               DateTime             @default(now())
-  updatedAt               DateTime             @updatedAt
-
-  complianceCheckResult ComplianceCheckResult? @relation(fields: [complianceCheckResultId], references: [id], onDelete: Cascade)
-  user                  User?                  @relation(fields: [userId], references: [id])
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  complianceCheckResult   ComplianceCheckResult? @relation(fields: [complianceCheckResultId], references: [id], onDelete: Cascade)
+  user                    User?                  @relation(fields: [userId], references: [id])
 
   @@index([isRead, createdAt])
   @@index([userId, isRead])
+}
+
+/// ------------  ユーザー関連 ------------
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  name          String
+  createdAt     DateTime       @default(now())
+  dataVersions  DataVersion[]
+  notifications Notification[]
+  sources       Source[]
+  uploads       Upload[]
+}
+
+model csv_file_history {
+  id                Int                 @id @default(autoincrement())
+  uploadId          Int                 @unique
+  filename          String
+  uploadedAt        DateTime            @default(now())
+  processingStatus  ProcessingStatus    @default(PENDING)
+  detectedKpis      Int                 @default(0)
+  processedRecords  Int                 @default(0)
+  mappingResults    Json?
+  analysisResults   Json?
+  complianceImpact  Json?
+  processingTimeMs  Int?
+  errorDetails      String?
+  Upload            Upload              @relation(fields: [uploadId], references: [id])
+  kpi_contributions kpi_contributions[]
+}
+
+model cumulative_kpis {
+  id                       Int                      @id @default(autoincrement())
+  standardKpiId            String                   @unique
+  standardKpiName          String
+  cumulativeValue          Decimal
+  unit                     String
+  lastUpdated              DateTime                 @default(now())
+  recordCount              Int                      @default(0)
+  contributingFileIds      Int[]
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime
+  standard_kpi_definitions standard_kpi_definitions @relation(fields: [standardKpiId], references: [id])
+  kpi_contributions        kpi_contributions[]
+}
+
+model kpi_contributions {
+  id               Int              @id @default(autoincrement())
+  cumulativeKpiId  Int
+  csvFileHistoryId Int
+  contributedValue Decimal
+  recordCount      Int
+  confidence       Float
+  mappingDetails   Json?
+  createdAt        DateTime         @default(now())
+  csv_file_history csv_file_history @relation(fields: [csvFileHistoryId], references: [id])
+  cumulative_kpis  cumulative_kpis  @relation(fields: [cumulativeKpiId], references: [id])
+
+  @@unique([cumulativeKpiId, csvFileHistoryId])
+}
+
+model standard_kpi_definitions {
+  id              String           @id
+  name            String
+  category        String
+  description     String?
+  preferredUnit   String
+  aliases         String[]
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  cumulative_kpis cumulative_kpis?
 }
 
 /// ------------ ENUM ------------
@@ -307,14 +252,9 @@ enum NotificationPriority {
   low
 }
 
-/// ------------  ユーザー関連 ------------
-model User {
-  id            Int            @id @default(autoincrement())
-  email         String         @unique
-  name          String
-  createdAt     DateTime       @default(now())
-  dataVersions  DataVersion[]
-  sources       Source[]
-  uploads       Upload[]
-  notifications Notification[]
-} 
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  ERROR
+}

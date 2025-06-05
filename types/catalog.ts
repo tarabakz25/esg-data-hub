@@ -8,7 +8,7 @@ export const KPISearchQuery = z.object({
   unit: z.string().optional(),
   page: z.number().default(1),
   limit: z.number().default(10),
-  sortBy: z.enum(['name', 'code', 'createdAt', 'relevance']).default('relevance'),
+  sortBy: z.enum(['name', 'code', 'createdAt']).default('name'),
   sortOrder: z.enum(['asc', 'desc']).default('asc'),
 })
 export type KPISearchQuery = z.infer<typeof KPISearchQuery>
@@ -50,7 +50,7 @@ export interface KPIRequirement {
 
 // KPI詳細
 export interface KPIDetail {
-  id: number
+  id: string
   code: string
   displayName: string
   baseUnit: string
