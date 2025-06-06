@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
-import { useNotifications } from '../../hooks/useNotifications';
+import { useNotifications } from '@/app/hooks/useNotifications';
 
 export default function TestNotificationsPage() {
   const [period, setPeriod] = useState('2024Q3');

@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
-import NextAuth, { type AuthOptions } from "next-auth"  
-import CredentialsProvider from "next-auth/providers/credentials"
-import GitHubProvider from "next-auth/providers/github"
+import NextAuth, { type NextAuthConfig } from "next-auth"
+import Credentials from "next-auth/providers/credentials"
+import GitHub from "next-auth/providers/github"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import prisma from "@/lib/utils/db"
 import { UserRole, ROLE_PERMISSIONS } from "@/types/auth"
@@ -22,14 +22,39 @@ interface ExtendedSession extends Session {
   }
 }
 
-export const authConfig: AuthOptions = {
+// JWT拡張型
+interface ExtendedJWT extends JWT {
+  role: UserRole
+  department: string
+  permissions: any
+}
+
+export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
+  trustHost: true,
+  useSecureCookies: process.env.NODE_ENV === "production",
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production" ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   providers: [
-    GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    GitHub({
+      clientId: process.env["GITHUB_CLIENT_ID"] ?? "",
+      clientSecret: process.env["GITHUB_CLIENT_SECRET"] ?? "",
+      authorization: {
+        params: {
+          scope: "read:user user:email"
+        }
+      }
     }),
-    CredentialsProvider({
+    Credentials({
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -43,7 +68,7 @@ export const authConfig: AuthOptions = {
         try {
           // データベースからユーザーを検索
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email }
+            where: { email: credentials.email as string }
           })
 
           if (!user) {
@@ -51,10 +76,8 @@ export const authConfig: AuthOptions = {
           }
 
           // パスワードの検証
-          // 注意: この実装では、Userテーブルにpasswordとrole、departmentフィールドが必要です
-          // 本番環境ではパスワードはbcryptでハッシュ化して保存する必要があります
           const isPasswordValid = await bcrypt.compare(
-            credentials.password, 
+            credentials.password as string, 
             user.password || ""
           )
 
@@ -91,7 +114,6 @@ export const authConfig: AuthOptions = {
               data: {
                 email: user.email!,
                 name: user.name || "",
-                image: user.image,
                 role: "viewer",
                 department: "",
                 // GitHubユーザーはパスワードなし
@@ -105,7 +127,7 @@ export const authConfig: AuthOptions = {
       }
       return true
     },
-    async jwt({ token, user, account }: { token: JWT; user?: User & { role?: UserRole; department?: string }; account?: any }) {
+    async jwt({ token, user, account }) {
       // GitHubログインの場合、DBからユーザー情報を取得
       if (account?.provider === "github" || !token.role) {
         try {
@@ -126,23 +148,23 @@ export const authConfig: AuthOptions = {
         }
       }
       
-      if (user) {
-        token.role = user.role
-        token.department = user.department
+      if (user && 'role' in user && 'department' in user) {
+        token.role = user['role'] as UserRole
+        token.department = user['department'] as string
         
         // JWTトークンに権限情報を埋め込み
-        const permissions = ROLE_PERMISSIONS[user.role as UserRole] || []
+        const permissions = ROLE_PERMISSIONS[user['role'] as UserRole] || []
         token.permissions = permissions
       }
       return token
     },
-    async session({ session, token }: { session: Session; token: JWT & { role?: UserRole; department?: string; permissions?: any } }): Promise<ExtendedSession> {
+    async session({ session, token }) {
       if (token && session.user) {
         const extendedSession = session as ExtendedSession
         extendedSession.user.id = token.sub!
-        extendedSession.user.role = token.role as UserRole || "viewer"
-        extendedSession.user.department = token.department as string || ""
-        extendedSession.user.permissions = token.permissions as any
+        extendedSession.user.role = (token['role'] as UserRole) || "viewer"
+        extendedSession.user.department = (token['department'] as string) || ""
+        extendedSession.user.permissions = token['permissions']
         return extendedSession
       }
       return session as ExtendedSession
@@ -154,32 +176,22 @@ export const authConfig: AuthOptions = {
   session: {
     strategy: "jwt" as const,
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
+  secret: process.env.NEXTAUTH_SECRET || "fallback-secret-please-change-in-production",
 }
 
-// NextAuth v4用
-const nextAuthHandler = NextAuth(authConfig)
-
-// ハンドラーを手動で作成
-export const handlers = {
-  GET: nextAuthHandler,
-  POST: nextAuthHandler,
-}
-
-// NextAuth v4用のメソッド
-export const auth = () => nextAuthHandler
-export const signIn = () => nextAuthHandler  
-export const signOut = () => nextAuthHandler
+// NextAuth v5用のハンドラー
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
 
 // JWT utility functions
 export function signJWT(payload: string | object | Buffer, expiresIn: string = "1h"): string {
-  const secret = process.env.NEXTAUTH_SECRET || "fallback-secret"
-  return jwt.sign(payload, secret, { expiresIn } as any)
+  const secret = process.env.NEXTAUTH_SECRET || "fallback-secret-please-change-in-production"
+  return jwt.sign(payload, secret, { expiresIn })
 }
 
 export function verifyJWT(token: string) {
   try {
-    const secret = process.env.NEXTAUTH_SECRET || "fallback-secret"
+    const secret = process.env.NEXTAUTH_SECRET || "fallback-secret-please-change-in-production"
     return jwt.verify(token, secret)
   } catch (error) {
     return null
@@ -193,15 +205,12 @@ export function hasPermission(
   action: "read" | "write" | "delete" | "approve"
 ): boolean {
   const permissions = ROLE_PERMISSIONS[userRole] || []
-  
-  return permissions.some(
-    (permission) =>
-      (permission.resource === "*" || permission.resource === resource) &&
-      permission.action === action
+  return permissions.some((permission: any) => 
+    permission.resource === resource && permission.actions.includes(action)
   )
 }
 
-// ユーザー作成用ヘルパー関数（管理者用）
+// ユーザー作成関数
 export async function createUser(userData: {
   email: string
   name: string
@@ -209,15 +218,23 @@ export async function createUser(userData: {
   role: UserRole
   department?: string
 }) {
-  const hashedPassword = await bcrypt.hash(userData.password, 12)
-  
-  return await prisma.user.create({
-    data: {
-      email: userData.email,
-      name: userData.name,
-      password: hashedPassword,
-      role: userData.role,
-      department: userData.department || "",
-    }
-  })
+  try {
+    // パスワードをハッシュ化
+    const hashedPassword = await bcrypt.hash(userData.password, 12)
+    
+    const user = await prisma.user.create({
+      data: {
+        email: userData.email,
+        name: userData.name,
+        password: hashedPassword,
+        role: userData.role,
+        department: userData.department || "",
+      }
+    })
+    
+    return { success: true, user: { id: user.id, email: user.email, name: user.name } }
+  } catch (error) {
+    console.error("User creation error:", error)
+    return { success: false, error: "ユーザー作成に失敗しました" }
+  }
 } 

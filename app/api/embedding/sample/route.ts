@@ -122,14 +122,28 @@ async function handleColumnBatchProcessing(columns: any[]) {
   // OpenAI で一括埋め込み生成
   const embeddings = await openaiClient.generateBatchEmbeddings(hybridTexts.map(h => h.hybridText));
 
+  // 配列の長さが一致することを確認
+  if (columns.length !== hybridTexts.length || columns.length !== embeddings.length) {
+    throw new Error('Array length mismatch in batch processing');
+  }
+
   // 結果をまとめる
   for (let i = 0; i < columns.length; i++) {
+    const hybridTextItem = hybridTexts[i];
+    const embedding = embeddings[i];
+    
+    // 安全性チェック
+    if (!hybridTextItem || !embedding) {
+      console.warn(`Missing data at index ${i}, skipping...`);
+      continue;
+    }
+    
     results.push({
       columnName: columns[i].columnName,
       sampleValues: columns[i].sampleValues,
-      analysis: hybridTexts[i].analysis,
-      hybridText: hybridTexts[i].hybridText,
-      embedding: embeddings[i],
+      analysis: hybridTextItem.analysis,
+      hybridText: hybridTextItem.hybridText,
+      embedding: embedding,
     });
   }
 
@@ -181,21 +195,36 @@ async function handleKPIGroupBatchProcessing(kpiGroups: KPIGroupData[]) {
   // OpenAI で一括埋め込み生成
   const embeddings = await openaiClient.generateBatchEmbeddings(embeddingTexts.map(et => et.enhancedText));
 
+  // 配列の長さが一致することを確認
+  if (kpiGroups.length !== embeddingTexts.length || kpiGroups.length !== embeddings.length) {
+    throw new Error('Array length mismatch in KPI group batch processing');
+  }
+
   // 結果をまとめる
   for (let i = 0; i < kpiGroups.length; i++) {
+    const kpiGroup = kpiGroups[i];
+    const embeddingTextItem = embeddingTexts[i];
+    const embedding = embeddings[i];
+    
+    // 安全性チェック
+    if (!kpiGroup || !embeddingTextItem || !embedding) {
+      console.warn(`Missing data at index ${i}, skipping...`);
+      continue;
+    }
+    
     results.push({
-      kpiIdentifier: kpiGroups[i].kpiIdentifier,
-      aggregatedValue: kpiGroups[i].aggregatedValue,
-      unit: kpiGroups[i].commonUnit,
-      recordCount: kpiGroups[i].recordCount,
-      embeddingText: embeddingTexts[i].embeddingText,
-      enhancedText: embeddingTexts[i].enhancedText,
-      groupAnalysis: embeddingTexts[i].groupAnalysis,
-      embedding: embeddings[i],
+      kpiIdentifier: kpiGroup.kpiIdentifier,
+      aggregatedValue: kpiGroup.aggregatedValue,
+      unit: kpiGroup.commonUnit,
+      recordCount: kpiGroup.recordCount,
+      embeddingText: embeddingTextItem.embeddingText,
+      enhancedText: embeddingTextItem.enhancedText,
+      groupAnalysis: embeddingTextItem.groupAnalysis,
+      embedding: embedding,
       estimatedType: SampleValueAnalyzer.estimateKPIType(
-        kpiGroups[i].kpiIdentifier, 
-        kpiGroups[i].records.map(r => r.value), 
-        kpiGroups[i].commonUnit
+        kpiGroup.kpiIdentifier, 
+        kpiGroup.records.map(r => r.value), 
+        kpiGroup.commonUnit
       )
     });
   }

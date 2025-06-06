@@ -132,7 +132,7 @@ export class CsvHistoryService {
           detectedKpis: results.detectedKpis,
           processedRecords: results.processedRecords,
           processingTimeMs: results.processingTimeMs,
-          errorDetails: results.errorDetails
+          errorDetails: results.errorDetails || null
         }
       });
 
@@ -224,9 +224,9 @@ export class CsvHistoryService {
       const history = await prisma.csv_file_history.findUnique({
         where: { id: fileId },
         include: {
-          contributions: {
+          kpi_contributions: {
             include: {
-              cumulativeKpi: true
+              cumulative_kpis: true
             }
           }
         }
@@ -240,7 +240,7 @@ export class CsvHistoryService {
       const mappingResults = this.extractMappingResults(history.mappingResults);
 
       // KPI貢献度の計算
-      const kpiContributions = await this.calculateKpiContributions(history.contributions);
+      const kpiContributions = await this.calculateKpiContributions(history.kpi_contributions);
 
       return {
         file: {
@@ -250,7 +250,7 @@ export class CsvHistoryService {
           uploadedAt: history.uploadedAt,
           processingTimeMs: history.processingTimeMs,
           processingStatus: history.processingStatus,
-          errorDetails: history.errorDetails || undefined
+          errorDetails: history.errorDetails || ''
         },
         mappingResults,
         kpiContributions,

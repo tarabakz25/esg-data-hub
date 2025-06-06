@@ -16,18 +16,23 @@ function parseGraphQLQuery(query: string): any {
       const inputStr = match[1];
       const input: any = {};
       
+      // inputStrの存在確認
+      if (!inputStr) {
+        return { type: 'searchKPIs', input: {} };
+      }
+      
       // 基本的なフィールド解析
       const qMatch = inputStr.match(/q:\s*"([^"]*)"/);
-      if (qMatch) input.q = qMatch[1];
+      if (qMatch && qMatch[1]) input.q = qMatch[1];
       
       const regulationMatch = inputStr.match(/regulation:\s*"([^"]*)"/);
-      if (regulationMatch) input.regulation = regulationMatch[1];
+      if (regulationMatch && regulationMatch[1]) input.regulation = regulationMatch[1];
       
       const pageMatch = inputStr.match(/page:\s*(\d+)/);
-      if (pageMatch) input.page = parseInt(pageMatch[1]);
+      if (pageMatch && pageMatch[1]) input.page = parseInt(pageMatch[1]);
       
       const limitMatch = inputStr.match(/limit:\s*(\d+)/);
-      if (limitMatch) input.limit = parseInt(limitMatch[1]);
+      if (limitMatch && limitMatch[1]) input.limit = parseInt(limitMatch[1]);
       
       return { type: 'searchKPIs', input };
     }
@@ -46,14 +51,19 @@ function parseGraphQLQuery(query: string): any {
       const inputStr = match[1];
       const input: any = {};
       
+      // inputStrの存在確認
+      if (!inputStr) {
+        return { type: 'searchDataSources', input: {} };
+      }
+      
       const qMatch = inputStr.match(/q:\s*"([^"]*)"/);
-      if (qMatch) input.q = qMatch[1];
+      if (qMatch && qMatch[1]) input.q = qMatch[1];
       
       const pageMatch = inputStr.match(/page:\s*(\d+)/);
-      if (pageMatch) input.page = parseInt(pageMatch[1]);
+      if (pageMatch && pageMatch[1]) input.page = parseInt(pageMatch[1]);
       
       const limitMatch = inputStr.match(/limit:\s*(\d+)/);
-      if (limitMatch) input.limit = parseInt(limitMatch[1]);
+      if (limitMatch && limitMatch[1]) input.limit = parseInt(limitMatch[1]);
       
       return { type: 'searchDataSources', input };
     }
@@ -61,7 +71,7 @@ function parseGraphQLQuery(query: string): any {
   
   if (trimmed.includes('getDataSource')) {
     const match = trimmed.match(/getDataSource\s*\(\s*id:\s*(\d+)\s*\)/);
-    if (match) {
+    if (match && match[1]) {
       return { type: 'getDataSource', id: parseInt(match[1]) };
     }
   }
@@ -225,4 +235,4 @@ export async function GET(request: NextRequest) {
       `
     }
   });
-} 
+}

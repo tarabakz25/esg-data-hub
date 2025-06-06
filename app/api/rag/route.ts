@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getEmbedding } from "@/../../packages/utils/embedding";
-import { prisma } from "@/../../packages/utils/db";
+import { embedText as getEmbedding } from "@/lib/utils/embedding";
+import prisma from "@/lib/utils/db";
 import { findNearestKpi, KpiSearchError, type Kpi } from "./kpiRepo";
 
 // 型定義の改善

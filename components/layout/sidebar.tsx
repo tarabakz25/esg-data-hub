@@ -88,27 +88,6 @@ export function Sidebar({ className }: SidebarProps) {
           </Link>
         </div>
       </div>
-
-      {/* User Section */}
-      <div className="border-t border-slate-700 p-4">
-        <div className="flex items-center space-x-3 mb-3">
-          <div className="h-10 w-10 rounded-full esg-gradient flex items-center justify-center shadow-md">
-            <span className="text-sm font-semibold text-white">JD</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">
-              田中 太郎
-            </p>
-            <p className="text-xs text-slate-400 truncate">
-              ESGデータマネージャー
-            </p>
-          </div>
-        </div>
-        <button className="flex items-center w-full text-left px-2 py-2 text-xs text-slate-400 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition-all duration-200">
-          <LogOut className="mr-2 h-3 w-3" />
-          サインアウト
-        </button>
-      </div>
     </div>
   );
 } 

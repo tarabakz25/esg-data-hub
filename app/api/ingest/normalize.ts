@@ -15,7 +15,7 @@ export interface CsvRow {
 
 // 正規化エラーの型定義
 export class NormalizationError extends Error {
-  constructor(message: string, public cause?: unknown, public rowId?: string) {
+  constructor(message: string, public override cause?: unknown, public rowId?: string) {
     super(message);
     this.name = 'NormalizationError';
   }
@@ -110,6 +110,15 @@ export async function normalize(row: any): Promise<NormalizationResult> {
     }
 
     const kpi = kpis[0];
+    
+    // kpiの存在確認
+    if (!kpi) {
+      throw new NormalizationError(
+        "取得されたKPIデータが無効です", 
+        undefined, 
+        row.id
+      );
+    }
 
     // 単位変換
     let baseValue: number;

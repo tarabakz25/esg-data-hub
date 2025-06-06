@@ -54,9 +54,18 @@ export async function DELETE(request: NextRequest) {
     // URLからファイルIDを取得
     const url = new URL(request.url);
     const pathSegments = url.pathname.split('/');
-    const fileId = parseInt(pathSegments[pathSegments.length - 1]);
+    const fileIdStr = pathSegments[pathSegments.length - 1];
+    
+    if (!fileIdStr) {
+      return NextResponse.json(
+        { error: 'File ID not found in URL' },
+        { status: 400 }
+      );
+    }
+    
+    const fileId = parseInt(fileIdStr);
 
-    if (!fileId || isNaN(fileId)) {
+    if (isNaN(fileId)) {
       return NextResponse.json(
         { error: 'Invalid file ID' },
         { status: 400 }

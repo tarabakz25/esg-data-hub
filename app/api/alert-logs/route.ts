@@ -15,18 +15,18 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const where: any = {};
-    if (alertType) where.alertType = alertType;
-    if (status) where.status = status;
-    if (department) where.department = department;
+    if (alertType) where.type = alertType;
+    if (status) where.isRead = status === 'read';
+    if (department) where.user = { department };
 
     const [alerts, total] = await Promise.all([
-      prisma.alertLog.findMany({
+      prisma.notification.findMany({
         where,
-        orderBy: { sentAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
         take: limit,
         skip: offset,
       }),
-      prisma.alertLog.count({ where })
+      prisma.notification.count({ where })
     ]);
 
     return NextResponse.json({
@@ -73,16 +73,15 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const updateData: any = { status };
+    const updateData: any = {};
     
-    if (status === 'acknowledged') {
-      updateData.acknowledgedAt = new Date();
-    } else if (status === 'resolved') {
-      updateData.resolvedAt = new Date();
+    if (status === 'acknowledged' || status === 'resolved') {
+      updateData.isRead = true;
+      updateData.updatedAt = new Date();
     }
 
-    const updatedAlert = await prisma.alertLog.update({
-      where: { id: BigInt(alertId) },
+    const updatedAlert = await prisma.notification.update({
+      where: { id: alertId },
       data: updateData,
     });
 

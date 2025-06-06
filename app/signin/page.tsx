@@ -5,15 +5,18 @@ import { signIn, getSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui"
-import { Github, Lock, Mail, Eye, EyeOff } from "lucide-react"
+import { Github, Lock, Mail, Eye, EyeOff, User } from "lucide-react"
 import { ESGIcon } from "@/components/ui/esg-theme"
 
 export default function SignInPage() {
+  const [mode, setMode] = useState<"signin" | "register">("signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
   const [loading, setLoading] = useState(false)
   const [githubLoading, setGithubLoading] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
@@ -21,20 +24,49 @@ export default function SignInPage() {
     e.preventDefault()
     setLoading(true)
     setError("")
+    setSuccess("")
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      })
+      if (mode === "signin") {
+        // ログイン処理
+        const result = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        })
 
-      if (result?.error) {
-        setError("認証に失敗しました。メールアドレスとパスワードを確認してください。")
+        if (result?.error) {
+          setError("認証に失敗しました。メールアドレスとパスワードを確認してください。")
+        } else {
+          const session = await getSession()
+          if (session) {
+            router.push("/dashboard")
+          }
+        }
       } else {
-        const session = await getSession()
-        if (session) {
-          router.push("/dashboard")
+        // 新規登録処理
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            name,
+            role: "viewer", // デフォルトは閲覧者権限
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          setError(data.error || "登録に失敗しました")
+        } else {
+          setSuccess("アカウントの作成が完了しました。ログインしてください。")
+          setMode("signin")
+          setPassword("")
+          setName("")
         }
       }
     } catch (error) {
@@ -72,52 +104,116 @@ export default function SignInPage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">ESG Data Hub</h1>
             <p className="text-muted-foreground">
-              ESGデータ管理プラットフォームにログイン
+              ESGデータ管理プラットフォーム
             </p>
           </div>
         </div>
 
         <Card className="shadow-lg border-0 bg-background/80 backdrop-blur-sm">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl text-center">ログイン</CardTitle>
+            {/* タブ切り替え */}
+            <div className="flex bg-muted rounded-lg p-1 mb-4">
+              <button
+                type="button"
+                className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all ${
+                  mode === "signin"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => {
+                  setMode("signin")
+                  setError("")
+                  setSuccess("")
+                }}
+              >
+                ログイン
+              </button>
+              <button
+                type="button"
+                className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all ${
+                  mode === "register"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => {
+                  setMode("register")
+                  setError("")
+                  setSuccess("")
+                }}
+              >
+                新規登録
+              </button>
+            </div>
+
+            <CardTitle className="text-xl text-center">
+              {mode === "signin" ? "ログイン" : "新規登録"}
+            </CardTitle>
             <CardDescription className="text-center">
-              GitHubアカウントまたはメールアドレスでログインしてください
+              {mode === "signin" 
+                ? "GitHubアカウントまたはメールアドレスでログインしてください"
+                : "新しいアカウントを作成してください"
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* GitHub Sign In */}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-12 text-base font-medium bg-background hover:bg-muted transition-all duration-200 border-2"
-              onClick={handleGithubSignIn}
-              disabled={githubLoading || loading}
-            >
-              {githubLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
-                  <span>GitHubで認証中...</span>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Github className="h-5 w-5" />
-                  <span>GitHubでログイン</span>
-                </div>
-              )}
-            </Button>
+            {/* GitHub Sign In - ログインモードのみ表示 */}
+            {mode === "signin" && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-12 text-base font-medium bg-background hover:bg-muted transition-all duration-200 border-2"
+                  onClick={handleGithubSignIn}
+                  disabled={githubLoading || loading}
+                >
+                  {githubLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
+                      <span>GitHubで認証中...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Github className="h-5 w-5" />
+                      <span>GitHubでログイン</span>
+                    </div>
+                  )}
+                </Button>
 
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-muted-foreground/20" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">または</span>
-              </div>
-            </div>
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-muted-foreground/20" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">または</span>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Credentials Form */}
             <form onSubmit={handleCredentialsSubmit} className="space-y-4">
+              {/* 名前フィールド - 新規登録モードのみ表示 */}
+              {mode === "register" && (
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium text-foreground">
+                    お名前
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      className="w-full h-12 pl-10 pr-4 text-base border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-background"
+                      placeholder="田中太郎"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium text-foreground">
                   メールアドレス
@@ -139,6 +235,9 @@ export default function SignInPage() {
               <div className="space-y-2">
                 <label htmlFor="password" className="text-sm font-medium text-foreground">
                   パスワード
+                  {mode === "register" && (
+                    <span className="text-xs text-muted-foreground ml-1">（8文字以上）</span>
+                  )}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -148,8 +247,9 @@ export default function SignInPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={mode === "register" ? 8 : undefined}
                     className="w-full h-12 pl-10 pr-12 text-base border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-background"
-                    placeholder="パスワードを入力"
+                    placeholder={mode === "register" ? "8文字以上のパスワード" : "パスワードを入力"}
                   />
                   <button
                     type="button"
@@ -167,6 +267,12 @@ export default function SignInPage() {
                 </div>
               )}
 
+              {success && (
+                <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                  <p className="text-sm text-green-700 font-medium">{success}</p>
+                </div>
+              )}
+
               <Button
                 type="submit"
                 className="w-full h-12 text-base font-medium"
@@ -175,10 +281,10 @@ export default function SignInPage() {
                 {loading ? (
                   <div className="flex items-center space-x-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground border-t-transparent" />
-                    <span>ログイン中...</span>
+                    <span>{mode === "signin" ? "ログイン中..." : "登録中..."}</span>
                   </div>
                 ) : (
-                  "ログイン"
+                  mode === "signin" ? "ログイン" : "アカウントを作成"
                 )}
               </Button>
             </form>
@@ -187,9 +293,15 @@ export default function SignInPage() {
 
         {/* Information */}
         <div className="text-center text-sm text-muted-foreground">
-          <p>
-            初回GitHubログインの場合、自動的にアカウントが作成されます
-          </p>
+          {mode === "signin" ? (
+            <p>
+              初回GitHubログインの場合、自動的にアカウントが作成されます
+            </p>
+          ) : (
+            <p>
+              作成されるアカウントは閲覧者権限となります。管理者権限が必要な場合は管理者にお問い合わせください。
+            </p>
+          )}
         </div>
       </div>
     </div>

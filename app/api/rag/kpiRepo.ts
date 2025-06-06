@@ -1,4 +1,4 @@
-import { prisma } from "@/../../packages/utils/db";
+import prisma from "@/lib/utils/db";
 
 // KPI型の定義を拡張
 export interface Kpi {

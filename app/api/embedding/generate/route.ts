@@ -97,6 +97,14 @@ export async function GET(request: NextRequest) {
 
     const dataRow = result[0];
 
+    // dataRowが存在することを確認（result配列の長さは既に検証済み）
+    if (!dataRow) {
+      return NextResponse.json(
+        { error: 'DataRow not found' },
+        { status: 404 }
+      );
+    }
+
     // pgvectorからベクトルを取得
     let embedding = null;
     if (dataRow.embedding) {
