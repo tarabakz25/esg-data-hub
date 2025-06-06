@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { getServerSession } from 'next-auth';
+import { auth } from '@/lib/auth';
 
 // セキュリティ設定
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB (本番用に増加)
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     // 認証チェック（本番環境では必須）
     let userId = 1; // デフォルトユーザー
     try {
-      const session = await getServerSession();
+      const session = await auth();
       if (session?.user?.email) {
         const user = await prisma.user.findUnique({
           where: { email: session.user.email }

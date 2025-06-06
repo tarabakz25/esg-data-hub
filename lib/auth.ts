@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken"
 import NextAuth, { type NextAuthConfig } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import GitHub from "next-auth/providers/github"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import prisma from "@/lib/utils/db"
 import { UserRole, ROLE_PERMISSIONS } from "@/types/auth"
@@ -45,15 +44,6 @@ export const authConfig: NextAuthConfig = {
     },
   },
   providers: [
-    GitHub({
-      clientId: process.env["GITHUB_CLIENT_ID"] ?? "",
-      clientSecret: process.env["GITHUB_CLIENT_SECRET"] ?? "",
-      authorization: {
-        params: {
-          scope: "read:user user:email"
-        }
-      }
-    }),
     Credentials({
       name: "credentials",
       credentials: {
@@ -100,54 +90,7 @@ export const authConfig: NextAuthConfig = {
     })
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // GitHubログインの場合、ユーザーが存在しない場合は作成
-      if (account?.provider === "github") {
-        try {
-          const existingUser = await prisma.user.findUnique({
-            where: { email: user.email! }
-          })
-
-          if (!existingUser) {
-            // 新規GitHubユーザーを作成（デフォルトはviewer権限）
-            await prisma.user.create({
-              data: {
-                email: user.email!,
-                name: user.name || "",
-                role: "viewer",
-                department: "",
-                // GitHubユーザーはパスワードなし
-              }
-            })
-          }
-        } catch (error) {
-          console.error("GitHub ユーザー作成エラー:", error)
-          return false
-        }
-      }
-      return true
-    },
-    async jwt({ token, user, account }) {
-      // GitHubログインの場合、DBからユーザー情報を取得
-      if (account?.provider === "github" || !token.role) {
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: { email: token.email! }
-          })
-          
-          if (dbUser) {
-            token.role = dbUser.role as UserRole
-            token.department = dbUser.department || ""
-            
-            // JWTトークンに権限情報を埋め込み
-            const permissions = ROLE_PERMISSIONS[dbUser.role as UserRole] || []
-            token.permissions = permissions
-          }
-        } catch (error) {
-          console.error("JWT callback error:", error)
-        }
-      }
-      
+    async jwt({ token, user }) {
       if (user && 'role' in user && 'department' in user) {
         token.role = user['role'] as UserRole
         token.department = user['department'] as string

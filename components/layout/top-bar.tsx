@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { navigation } from "../../lib/navigation";
 import { UserNav } from "../dashboard/user-nav";
 
 export function TopBar() {
@@ -47,33 +46,7 @@ export function TopBar() {
           </Button>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center space-x-1">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`
-                  flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-theme relative
-                  ${active 
-                    ? 'bg-primary/10 text-primary shadow-sm border border-primary/20' 
-                    : 'text-gray-600 hover:text-primary hover:bg-primary/5'
-                  }
-                `}
-                title={item.description}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{item.name}</span>
-                {active && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full" />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+
 
         {/* Search Section */}
         <div className="flex-1 flex max-w-lg mx-4">

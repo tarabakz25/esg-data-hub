@@ -5,7 +5,7 @@ import { signIn, getSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui"
-import { Github, Lock, Mail, Eye, EyeOff, User } from "lucide-react"
+import { Lock, Mail, Eye, EyeOff, User } from "lucide-react"
 import { ESGIcon } from "@/components/ui/esg-theme"
 
 export default function SignInPage() {
@@ -14,7 +14,6 @@ export default function SignInPage() {
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
   const [loading, setLoading] = useState(false)
-  const [githubLoading, setGithubLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -73,21 +72,6 @@ export default function SignInPage() {
       setError("エラーが発生しました")
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleGithubSignIn = async () => {
-    setGithubLoading(true)
-    setError("")
-    
-    try {
-      await signIn("github", { 
-        callbackUrl: "/dashboard",
-        redirect: true 
-      })
-    } catch (error) {
-      setError("GitHubログインに失敗しました")
-      setGithubLoading(false)
     }
   }
 
@@ -150,47 +134,12 @@ export default function SignInPage() {
             </CardTitle>
             <CardDescription className="text-center">
               {mode === "signin" 
-                ? "GitHubアカウントまたはメールアドレスでログインしてください"
+                ? "メールアドレスとパスワードでログインしてください"
                 : "新しいアカウントを作成してください"
               }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* GitHub Sign In - ログインモードのみ表示 */}
-            {mode === "signin" && (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-12 text-base font-medium bg-background hover:bg-muted transition-all duration-200 border-2"
-                  onClick={handleGithubSignIn}
-                  disabled={githubLoading || loading}
-                >
-                  {githubLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
-                      <span>GitHubで認証中...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
-                      <Github className="h-5 w-5" />
-                      <span>GitHubでログイン</span>
-                    </div>
-                  )}
-                </Button>
-
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-muted-foreground/20" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">または</span>
-                  </div>
-                </div>
-              </>
-            )}
-
             {/* Credentials Form */}
             <form onSubmit={handleCredentialsSubmit} className="space-y-4">
               {/* 名前フィールド - 新規登録モードのみ表示 */}
@@ -276,7 +225,7 @@ export default function SignInPage() {
               <Button
                 type="submit"
                 className="w-full h-12 text-base font-medium"
-                disabled={loading || githubLoading}
+                disabled={loading}
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">
@@ -293,11 +242,7 @@ export default function SignInPage() {
 
         {/* Information */}
         <div className="text-center text-sm text-muted-foreground">
-          {mode === "signin" ? (
-            <p>
-              初回GitHubログインの場合、自動的にアカウントが作成されます
-            </p>
-          ) : (
+          {mode === "register" && (
             <p>
               作成されるアカウントは閲覧者権限となります。管理者権限が必要な場合は管理者にお問い合わせください。
             </p>

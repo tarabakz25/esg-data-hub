@@ -88,33 +88,6 @@ export default function DashboardPage() {
         icon={BarChart3}
       />
 
-      {/* Welcome Message */}
-      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-6 border border-primary/20">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 rounded-full bg-primary/20">
-            <span className="text-xl">👋</span>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-foreground">
-              ようこそ、{session.user?.name || 'ユーザー'}さん
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {session.user?.image?.includes('github') ? 'GitHubアカウント' : 'メールアカウント'}でログイン中 | 
-              権限: {(() => {
-                const role = (session.user as any)?.role || 'viewer';
-                const roleMap: Record<string, string> = {
-                  admin: '管理者',
-                  ir_manager: 'IR担当',
-                  auditor: '監査担当',
-                  viewer: '閲覧者',
-                };
-                return roleMap[role] || role;
-              })()}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Dashboard Items */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {dashboardItems.map((item) => {
