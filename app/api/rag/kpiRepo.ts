@@ -11,7 +11,7 @@ export interface Kpi {
 
 // エラー型の定義
 export class KpiSearchError extends Error {
-  constructor(message: string, public cause?: unknown) {
+  constructor(message: string, public override cause?: unknown) {
     super(message);
     this.name = 'KpiSearchError';
   }
@@ -73,8 +73,8 @@ export async function findKpiById(id: string): Promise<Kpi | null> {
   }
 
   try {
-    const kpi = await prisma.kPI.findUnique({
-      where: { id: parseInt(id) },
+    const kpi = await prisma.kpi.findUnique({
+      where: { id: id },
       select: {
         id: true,
         code: true,

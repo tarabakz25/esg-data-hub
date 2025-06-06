@@ -103,8 +103,8 @@ export async function POST(request: NextRequest) {
           data: {
             title: 'KPI欠損アラート',
             message,
-            type: 'ALERT',
-            priority: 'HIGH',
+            type: 'system_alert',
+            priority: 'high',
             isRead: false,
           }
         })
@@ -134,8 +134,8 @@ export async function POST(request: NextRequest) {
           data: {
             title: '期日接近アラート',
             message,
-            type: 'ALERT',
-            priority: 'HIGH',
+            type: 'system_alert',
+            priority: 'high',
             isRead: false,
           }
         })

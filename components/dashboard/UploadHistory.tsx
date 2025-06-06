@@ -67,7 +67,7 @@ export default function UploadHistory() {
   };
 
   const handleFileClick = (fileId: number) => {
-    router.push(`/dashboard/file-details/${fileId}`);
+            router.push(`/file-details/${fileId}`);
   };
 
   if (loading) {

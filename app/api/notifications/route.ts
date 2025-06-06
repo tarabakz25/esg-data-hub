@@ -14,11 +14,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     
     // クエリパラメータの解析
+    const isReadParam = searchParams.get('isRead');
     const filter: NotificationFilter = {
       type: searchParams.get('type')?.split(',') as any,
       priority: searchParams.get('priority')?.split(',') as any,
-      isRead: searchParams.get('isRead') === 'true' ? true : 
-              searchParams.get('isRead') === 'false' ? false : undefined,
+      ...(isReadParam === 'true' || isReadParam === 'false' ? { isRead: isReadParam === 'true' } : {}),
       limit: parseInt(searchParams.get('limit') || '20'),
       offset: parseInt(searchParams.get('offset') || '0'),
     };
@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
           }
         },
         orderBy: { createdAt: 'desc' },
-        take: filter.limit,
-        skip: filter.offset,
+        take: filter.limit || 20,
+        skip: filter.offset || 0,
       }),
       prisma.notification.count({ where }),
       prisma.notification.count({ where: { ...where, isRead: false } })
@@ -62,21 +62,23 @@ export async function GET(request: NextRequest) {
         priority: n.priority,
         title: n.title,
         message: n.message,
-        severity: n.severity || undefined,
+        severity: n.severity || 'critical',
         isRead: n.isRead,
         createdAt: n.createdAt,
         updatedAt: n.updatedAt,
-        actionUrl: n.actionUrl || undefined,
-        complianceDetails: n.complianceCheckResult ? {
-          period: n.complianceCheckResult.period,
-          standard: n.complianceCheckResult.standard,
-          missingKpis: n.complianceCheckResult.missingKpis.map((mk: any) => ({
-            kpiId: mk.kpiId,
-            kpiName: mk.kpiName,
-            category: mk.category
-          })),
-          complianceRate: n.complianceCheckResult.complianceRate
-        } : undefined
+        ...(n.actionUrl && { actionUrl: n.actionUrl }),
+        ...(n.complianceCheckResult && {
+          complianceDetails: {
+            period: n.complianceCheckResult.period,
+            standard: n.complianceCheckResult.standard,
+            missingKpis: n.complianceCheckResult.missingKpis.map((mk: any) => ({
+              kpiId: mk.kpiId,
+              kpiName: mk.kpiName,
+              category: mk.category
+            })),
+            complianceRate: n.complianceCheckResult.complianceRate
+          }
+        })
       })),
       totalCount,
       unreadCount,
@@ -127,21 +129,23 @@ export async function POST(request: NextRequest) {
       priority: notification.priority,
       title: notification.title,
       message: notification.message,
-      severity: notification.severity || undefined,
+      severity: notification.severity || 'critical',
       isRead: notification.isRead,
       createdAt: notification.createdAt,
       updatedAt: notification.updatedAt,
-      actionUrl: notification.actionUrl || undefined,
-      complianceDetails: notification.complianceCheckResult ? {
-        period: notification.complianceCheckResult.period,
-        standard: notification.complianceCheckResult.standard,
-        missingKpis: notification.complianceCheckResult.missingKpis.map((mk: any) => ({
-          kpiId: mk.kpiId,
-          kpiName: mk.kpiName,
-          category: mk.category
-        })),
-        complianceRate: notification.complianceCheckResult.complianceRate
-      } : undefined
+      ...(notification.actionUrl && { actionUrl: notification.actionUrl }),
+      ...(notification.complianceCheckResult && {
+        complianceDetails: {
+          period: notification.complianceCheckResult.period,
+          standard: notification.complianceCheckResult.standard,
+          missingKpis: notification.complianceCheckResult.missingKpis.map((mk: any) => ({
+            kpiId: mk.kpiId,
+            kpiName: mk.kpiName,
+            category: mk.category
+          })),
+          complianceRate: notification.complianceCheckResult.complianceRate
+        }
+      })
     };
 
     return NextResponse.json(result);

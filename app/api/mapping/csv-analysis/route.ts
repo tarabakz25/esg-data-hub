@@ -75,8 +75,8 @@ export async function POST(request: NextRequest) {
       kpiColumn,
       valueColumn,
       unitColumn,
-      periodColumn,
-      dataRowIdColumn
+      periodColumn: periodColumn || '',
+      dataRowIdColumn: dataRowIdColumn || ''
     });
 
     if (analysisResult.groupedKPIs.length === 0) {

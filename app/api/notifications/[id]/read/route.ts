@@ -30,21 +30,23 @@ export async function PUT(
       priority: notification.priority,
       title: notification.title,
       message: notification.message,
-      severity: notification.severity || undefined,
+      severity: notification.severity || 'critical',
       isRead: notification.isRead,
       createdAt: notification.createdAt,
       updatedAt: notification.updatedAt,
-      actionUrl: notification.actionUrl || undefined,
-      complianceDetails: notification.complianceCheckResult ? {
-        period: notification.complianceCheckResult.period,
-        standard: notification.complianceCheckResult.standard,
-        missingKpis: notification.complianceCheckResult.missingKpis.map((mk: any) => ({
-          kpiId: mk.kpiId,
-          kpiName: mk.kpiName,
-          category: mk.category
-        })),
-        complianceRate: notification.complianceCheckResult.complianceRate
-      } : undefined
+      ...(notification.actionUrl && { actionUrl: notification.actionUrl }),
+      ...(notification.complianceCheckResult && {
+        complianceDetails: {
+          period: notification.complianceCheckResult.period,
+          standard: notification.complianceCheckResult.standard,
+          missingKpis: notification.complianceCheckResult.missingKpis.map((mk: any) => ({
+            kpiId: mk.kpiId,
+            kpiName: mk.kpiName,
+            category: mk.category
+          })),
+          complianceRate: notification.complianceCheckResult.complianceRate
+        }
+      })
     };
 
     return NextResponse.json(result);

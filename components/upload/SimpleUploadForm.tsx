@@ -204,7 +204,7 @@ export default function SimpleUploadForm() {
 
       // 完了後、ダッシュボードにリダイレクト
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/');
       }, 1500);
 
     } catch (error) {
@@ -353,13 +353,13 @@ export default function SimpleUploadForm() {
               </p>
               <div className="space-x-3">
                 <button
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => router.push('/')}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
                 >
                   📊 ダッシュボードを表示
                 </button>
                 <button
-                  onClick={() => router.push('/data-management')}
+                  onClick={() => router.push('/data')}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
                 >
                   📋 データ管理画面へ
