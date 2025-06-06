@@ -1,14 +1,44 @@
 "use client";
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { ChartBarIcon, DocumentArrowUpIcon, MapIcon } from '@heroicons/react/24/outline';
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge, StatusBadge } from "@/components/ui";
 import { ESGIcon } from "@/components/ui/esg-theme";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Loader2 } from "lucide-react";
 import RecentActivity from "@/components/dashboard/RecentActivity";
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'loading') return; // まだロード中
+    if (!session) {
+      router.push('/signin');
+    }
+  }, [session, status, router]);
+
+  // ロード中の場合
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">認証情報を確認中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 未認証の場合
+  if (!session) {
+    return null; // useEffectでリダイレクトされるため、何も表示しない
+  }
+
   const dashboardItems = [
     {
       title: 'データ取り込み',
@@ -57,6 +87,33 @@ export default function DashboardPage() {
         description="ESGデータハブへようこそ。データの取り込み、管理、分析を効率的に行えます。"
         icon={BarChart3}
       />
+
+      {/* Welcome Message */}
+      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-6 border border-primary/20">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 rounded-full bg-primary/20">
+            <span className="text-xl">👋</span>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">
+              ようこそ、{session.user?.name || 'ユーザー'}さん
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {session.user?.image?.includes('github') ? 'GitHubアカウント' : 'メールアカウント'}でログイン中 | 
+              権限: {(() => {
+                const role = (session.user as any)?.role || 'viewer';
+                const roleMap: Record<string, string> = {
+                  admin: '管理者',
+                  ir_manager: 'IR担当',
+                  auditor: '監査担当',
+                  viewer: '閲覧者',
+                };
+                return roleMap[role] || role;
+              })()}
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Dashboard Items */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

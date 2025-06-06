@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { navigation } from "../../lib/navigation";
+import { UserNav } from "../dashboard/user-nav";
 
 export function TopBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -104,18 +105,8 @@ export function TopBar() {
             <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-error ring-2 ring-white animate-pulse"></span>
           </Button>
 
-          {/* Profile Section */}
-          <div className="flex items-center space-x-3">
-            <div className="hidden md:block text-right">
-              <p className="text-sm font-medium text-gray-900">John Doe</p>
-              <p className="text-xs text-muted-foreground">ESG Data Manager</p>
-            </div>
-            <Button variant="ghost" size="sm" className="flex items-center space-x-2 p-2 hover:bg-primary/10 rounded-lg transition-theme">
-              <div className="h-8 w-8 rounded-full esg-gradient flex items-center justify-center shadow-sm">
-                <span className="text-sm font-semibold text-white">JD</span>
-              </div>
-            </Button>
-          </div>
+          {/* User Navigation */}
+          <UserNav />
         </div>
       </div>
 

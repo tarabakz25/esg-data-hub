@@ -35,7 +35,7 @@
 | --- | --- | --- |
 | **REST API** | `/api/catalog/*` | ✅ KPI・データソース検索、統計情報 |
 | **GraphQL** | `/api/graphql` | ✅ 統合クエリ、リアルタイム分析 |
-| **認証** | `/api/auth/*` | ✅ NextAuth.js、ロールベース権限 |
+| **認証** | `/api/auth/*` | ✅ NextAuth.js、ロールベース権限、**GitHubログイン対応** |
 | **ヘルスチェック** | `/api/health` | ✅ システム監視・運用支援 |
 
 ### 3. ユーザーインターフェース
@@ -47,6 +47,7 @@
 | **カタログ** | ✅ KPI・データ検索、詳細表示 | Catalog Browser, Search |
 | **コンプライアンス** | ✅ 監査支援、証跡確認 | Compliance Monitor, Audit Trail |
 | **マッピング** | ✅ 自動マッピング、手動調整 | AutoMappingWizard |
+| **認証・ログイン** | ✅ GitHubログイン、従来ログイン | Modern Sign-in UI, OAuth Integration |
 
 ### 4. 技術アーキテクチャ実装
 
@@ -56,7 +57,7 @@
 | **バックエンド** | Next.js API Routes | REST/GraphQL endpoint, Middleware auth |
 | **データベース** | PostgreSQL + Prisma | pgvector拡張、監査ログ、バージョン管理 |
 | **AI/ML** | AWS Bedrock統合 | 埋め込み生成、意味マッピング、RAG検索 |
-| **認証・認可** | NextAuth.js | OAuth, JWT, RBAC (admin/ir_manager/auditor/viewer) |
+| **認証・認可** | NextAuth.js + GitHub OAuth | JWT, RBAC (admin/ir_manager/auditor/viewer) |
 | **状態管理** | TanStack Query | Server state sync, Optimistic updates |
 
 ## 業務フロー実装状況
@@ -141,7 +142,37 @@ ESG（環境・社会・ガバナンス）データの管理と分析を行うWe
 
 ## 🚀 クイックスタート
 
-### 1. 環境構築
+### 1. 環境変数の設定
+
+`.env.local` ファイルを作成し、以下の環境変数を設定してください：
+
+```bash
+# データベース
+DATABASE_URL="postgresql://username:password@localhost:5432/esg_data_hub"
+
+# NextAuth.js
+NEXTAUTH_SECRET="your-nextauth-secret-here"
+NEXTAUTH_URL="http://localhost:3000"
+
+# GitHub OAuth (GitHubログイン用)
+GITHUB_CLIENT_ID="your-github-client-id"
+GITHUB_CLIENT_SECRET="your-github-client-secret"
+
+# OpenAI API (AI機能用)
+OPENAI_API_KEY="your-openai-api-key"
+```
+
+#### GitHub OAuth アプリケーションの設定
+
+1. [GitHub Developer Settings](https://github.com/settings/developers) にアクセス
+2. "New OAuth App" をクリック
+3. 以下の設定を入力：
+   - **Application name**: ESG Data Hub
+   - **Homepage URL**: `http://localhost:3000` (開発環境) または本番URL
+   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
+4. 作成後、Client ID と Client Secret を `.env.local` に設定
+
+### 2. 環境構築
 
 ```bash
 # 依存関係のインストール
@@ -154,27 +185,53 @@ npm run db:generate
 npm run db:push
 ```
 
-### 2. 初期データの投入
+### 3. 初期データの投入
 
 ```bash
 # 標準KPI定義をデータベースに挿入
 npm run db:seed
 ```
 
-### 3. 初期管理者ユーザーの作成
+### 4. 初期管理者ユーザーの作成
 
 ```bash
 # 対話形式で管理者ユーザーを作成
 npm run admin:create
 ```
 
-### 4. 開発サーバーの起動
+### 5. 開発サーバーの起動
 
 ```bash
 npm run dev
 ```
 
 アプリケーションが `http://localhost:3000` で利用可能になります。
+
+## 🔐 認証・ログイン機能
+
+### ログイン方法
+
+ESG Data Hubでは、2つのログイン方法をサポートしています：
+
+1. **GitHubログイン（推奨）**
+   - GitHubアカウントでワンクリックログイン
+   - 初回ログイン時に自動でアカウント作成
+   - GitHubプロフィール情報を自動取得
+
+2. **従来のメール・パスワードログイン**
+   - 管理者が作成したアカウントでログイン
+   - 企業内アカウント管理に適用
+
+### ユーザー権限管理
+
+| ロール | 権限 | GitHubログイン時のデフォルト権限 |
+|--------|------|--------------------------------|
+| **admin** | 全機能への完全アクセス | - |
+| **ir_manager** | データ管理、レポート作成、ワークフロー承認 | - |
+| **auditor** | データ閲覧、監査機能、監査レポート作成 | - |
+| **viewer** | データとレポートの閲覧のみ | ✅ デフォルト |
+
+> **注意**: GitHubでログインしたユーザーは初期状態では「viewer」権限が付与されます。管理者が必要に応じて権限を変更してください。
 
 ## 🔑 ユーザー管理
 
