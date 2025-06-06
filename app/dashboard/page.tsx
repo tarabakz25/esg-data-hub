@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge, StatusBadge } from "@/components/ui";
 import { ESGIcon } from "@/components/ui/esg-theme";
 import { BarChart3 } from "lucide-react";
+import RecentActivity from "@/components/dashboard/RecentActivity";
 
 export default function DashboardPage() {
   const dashboardItems = [
@@ -74,7 +75,7 @@ export default function DashboardPage() {
                       <div className="p-2 rounded-lg bg-white/80 shadow-sm">
                         <ESGIcon category={item.esgCategory} size="md" />
                       </div>
-                      <CardTitle className="text-lg">
+                      <CardTitle className="text-lg text-black">
                         {item.title}
                       </CardTitle>
                     </div>
@@ -91,32 +92,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Activity */}
-      <Card className="card-shadow">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <BarChart3 className="h-5 w-5 text-primary" />
-            <span>最近のアクティビティ</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-2 border-b border-border">
-              <div className="flex items-center space-x-3">
-                <StatusBadge status="success" size="sm" showIcon={false}>稼働中</StatusBadge>
-                <span className="text-foreground">システム準備完了</span>
-              </div>
-              <span className="text-sm text-muted-foreground">今すぐ</span>
-            </div>
-            <div className="flex items-center justify-between py-2 border-b border-border">
-              <div className="flex items-center space-x-3">
-                <StatusBadge status="success" size="sm" showIcon={false}>稼働中</StatusBadge>
-                <span className="text-foreground">ESGデータハブが稼働中</span>
-              </div>
-              <span className="text-sm text-muted-foreground">今すぐ</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <RecentActivity
+        limit={8}
+        autoRefresh={true}
+        refreshInterval={30000}
+        showStats={true}
+      />
 
       {/* Tip Card */}
       <Card className="bg-primary/5 border-primary/20">

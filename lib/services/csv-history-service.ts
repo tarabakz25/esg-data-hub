@@ -84,7 +84,7 @@ export class CsvHistoryService {
         throw new Error(`アップロード情報が見つかりません: Upload ID ${uploadId}`);
       }
 
-      const history = await prisma.csvFileHistory.create({
+      const history = await prisma.csv_file_history.create({
         data: {
           uploadId,
           filename: upload.filename,
@@ -122,7 +122,7 @@ export class CsvHistoryService {
     }
   ): Promise<void> {
     try {
-      await prisma.csvFileHistory.updateMany({
+      await prisma.csv_file_history.updateMany({
         where: { uploadId: uploadId },
         data: {
           processingStatus: results.status || (results.errorDetails ? 'ERROR' : 'COMPLETED'),
@@ -166,7 +166,7 @@ export class CsvHistoryService {
       const offset = (page - 1) * limit;
 
       const [files, total] = await Promise.all([
-        prisma.csvFileHistory.findMany({
+        prisma.csv_file_history.findMany({
           orderBy: { uploadedAt: 'desc' }, // 最新が上（降順）
           skip: offset,
           take: limit,
@@ -181,7 +181,7 @@ export class CsvHistoryService {
             processingTimeMs: true
           }
         }),
-        prisma.csvFileHistory.count()
+        prisma.csv_file_history.count()
       ]);
 
       const totalPages = Math.ceil(total / limit);
@@ -221,7 +221,7 @@ export class CsvHistoryService {
   static async getFileDetails(fileId: number): Promise<FileDetailsResponse> {
     try {
       // 基本履歴情報を取得
-      const history = await prisma.csvFileHistory.findUnique({
+      const history = await prisma.csv_file_history.findUnique({
         where: { id: fileId },
         include: {
           contributions: {
@@ -378,7 +378,7 @@ export class CsvHistoryService {
         });
 
         // 履歴記録を削除
-        await tx.csvFileHistory.delete({
+        await tx.csv_file_history.delete({
           where: { id: fileId }
         });
       });
@@ -406,7 +406,7 @@ export class CsvHistoryService {
   }> {
     try {
       const [files, stats] = await Promise.all([
-        prisma.csvFileHistory.findMany({
+        prisma.csv_file_history.findMany({
           select: {
             processingStatus: true,
             processingTimeMs: true,
@@ -414,7 +414,7 @@ export class CsvHistoryService {
             processedRecords: true
           }
         }),
-        prisma.csvFileHistory.aggregate({
+        prisma.csv_file_history.aggregate({
           _count: true,
           _sum: {
             detectedKpis: true,

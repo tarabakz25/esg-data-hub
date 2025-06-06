@@ -9,7 +9,7 @@ const mockKpiValues = [
 ];
 
 // Prismaクライアントのモック
-jest.mock('../../../../generated/prisma', () => ({
+jest.mock('@prisma/client', () => ({
   PrismaClient: jest.fn().mockImplementation(() => ({
     kPIValue: {
       findMany: jest.fn().mockResolvedValue(mockKpiValues)
@@ -168,7 +168,7 @@ describe('KPIComplianceChecker', () => {
       };
 
       // 静的メソッド内で使用されるPrismaクライアントをモック
-      const mockPrisma = new (require('../../../../generated/prisma').PrismaClient)();
+      const mockPrisma = new (require('@prisma/client').PrismaClient)();
       mockPrisma.complianceCheckResult.findFirst.mockResolvedValueOnce(mockHistoryData);
 
       const result = await KPIComplianceChecker.getCheckResult('2024Q2', 'issb');

@@ -23,6 +23,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma db push --force-reset && npm run db:seed",
     "admin:create": "tsx scripts/create-admin.ts",
+    "activity:seed": "tsx scripts/seed-activity-data.ts",
     "security:audit": "npm audit --audit-level moderate",
     "security:fix": "npm audit fix",
     "docker:build": "docker build -t esg-data-hub .",
@@ -66,7 +67,7 @@
     "helmet": "^8.0.0",
     "cors": "^2.8.5",
     "compression": "^1.7.4",
-    "rate-limiter-flexible": "^3.0.8",
+    "rate-limiter-flexible": "^2.4.2",
     "winston": "^3.11.0"
   },
   "devDependencies": {

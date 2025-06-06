@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 import { KPIComplianceChecker } from './kpi-compliance-checker';
 import { ComplianceCheckOptions } from '../../../types/services/compliance';
 

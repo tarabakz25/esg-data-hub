@@ -217,7 +217,7 @@ export class AutoProcessingChain {
     successRate: number;
     autoApprovalRate: number;
   }> {
-    const histories = await db.csvFileHistory.findMany({
+    const histories = await db.csv_file_history.findMany({
       select: {
         processingStatus: true,
         processingTimeMs: true,
