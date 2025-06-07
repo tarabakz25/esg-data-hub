@@ -68,6 +68,7 @@ export class AutoProcessingChain {
         mappingResults: mappingResults,
         analysisResults: {
           uniqueKpiIds: analysisResult.uniqueKpiIds,
+          detectedColumns: analysisResult.detectedColumns,
           processingChainResult: 'AUTO_PROCESSING_SUCCESS'
         },
         complianceImpact: {
@@ -145,10 +146,19 @@ export class AutoProcessingChain {
     // KPI識別子を抽出
     const uniqueKpiIds = [...new Set(kpiValues.map((kv: any) => kv.kpiId))];
     
+    // CSVの列情報を取得（最初のデータ行から）
+    const firstDataRow = await db.dataRow.findFirst({
+      where: { uploadId },
+      select: { raw: true }
+    });
+    
+    const detectedColumns = firstDataRow?.raw ? Object.keys(firstDataRow.raw as any) : [];
+    
     return {
       detectedKpis: uniqueKpiIds.length,
       kpiValues: kpiValues,
-      uniqueKpiIds
+      uniqueKpiIds,
+      detectedColumns
     };
   }
   
@@ -163,10 +173,12 @@ export class AutoProcessingChain {
     const kpiGroups = this.groupByKpiId(kpiValues);
     
     for (const [csvKpiId, values] of Object.entries(kpiGroups)) {
+      console.log(`🔄 処理中のKPI: "${csvKpiId}" (値の数: ${(values as any[]).length})`);
+      
       // 標準KPIマッピングを実行
       const standardMapping = await CumulativeKpiService.mapToStandardKpi(csvKpiId);
       
-      if (standardMapping && standardMapping.confidence >= 0.6) { // 60%以上で自動承認
+      if (standardMapping && standardMapping.confidence >= 0.5) { // 50%以上で自動承認（改善されたマッピングロジック対応）
         const mappingResult: MappingResult = {
           csvKpiId,
           standardKpiId: standardMapping.standardKpiId,
@@ -185,9 +197,11 @@ export class AutoProcessingChain {
         };
         
         mappingResults.push(mappingResult);
-        console.log(`自動承認: ${csvKpiId} → ${standardMapping.standardKpiId} (${Math.round(standardMapping.confidence * 100)}%)`);
+        console.log(`✅ 自動承認: ${csvKpiId} → ${standardMapping.standardKpiId} (${Math.round(standardMapping.confidence * 100)}%)`);
+      } else if (standardMapping) {
+        console.log(`⚠️ 信頼度不足: "${csvKpiId}" -> "${standardMapping.standardKpiId}" (信頼度: ${Math.round(standardMapping.confidence * 100)}% < 50%)`);
       } else {
-        console.warn(`マッピング信頼度不足: ${csvKpiId} (${standardMapping?.confidence ? Math.round(standardMapping.confidence * 100) : 0}%)`);
+        console.log(`❌ マッピング失敗: "${csvKpiId}" - 候補が見つかりません`);
       }
     }
     

@@ -158,7 +158,7 @@ export class AutoAccumulationService {
       }
 
       // CumulativeKpiの貢献履歴からも確認
-      const cumulativeKpi = await db.cumulativeKpi.findUnique({
+      const cumulativeKpi = await db.cumulative_kpis.findUnique({
         where: { standardKpiId },
         include: {
           contributions: {
@@ -219,7 +219,7 @@ export class AutoAccumulationService {
         }
       }
 
-      await db.csvFileHistory.update({
+      await db.csv_file_history.update({
         where: { id: historyRecordId },
         data: updateData
       });
@@ -290,7 +290,7 @@ export class AutoAccumulationService {
     successRate: number;
     duplicateRate: number;
   }> {
-    const histories = await db.csvFileHistory.findMany({
+    const histories = await db.csv_file_history.findMany({
       select: {
         processingStatus: true,
         processingTimeMs: true,

@@ -46,28 +46,7 @@ export async function middleware(request: NextRequest) {
         new URL(`/signin?callbackUrl=${callbackUrl}`, request.url)
       )
     }
-
-    // Role-based access control
-    const userRole = session.user.role
-
-    // Admin-only routes
-    if (pathname.startsWith('/admin') && userRole !== 'admin') {
-      return NextResponse.redirect(new URL('/forbidden', request.url))
-    }
-
-    // Editor+ routes (admin, editor)
-    if ((pathname.startsWith('/sources') || 
-         pathname.startsWith('/ingest') || 
-         pathname.startsWith('/mapping')) && 
-         !['admin', 'editor'].includes(userRole)) {
-      return NextResponse.redirect(new URL('/forbidden', request.url))
-    }
-
-    // Auditor+ routes (admin, auditor)
-    if (pathname.startsWith('/audit') && 
-        !['admin', 'auditor'].includes(userRole)) {
-      return NextResponse.redirect(new URL('/forbidden', request.url))
-    }
+    // Role-based access control removed - all authenticated users can access all routes
   }
 
   // If user is logged in and tries to access public auth pages, redirect to dashboard

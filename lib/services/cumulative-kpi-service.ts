@@ -58,7 +58,7 @@ export class CumulativeKpiService {
       
       // 必要な標準KPI定義を一括取得
       const standardKpiIds = [...new Set(updates.map(u => u.standardKpiId))];
-      const standardKpis = await db.standardKpiDefinition.findMany({
+      const standardKpis = await db.standard_kpi_definitions.findMany({
         where: { 
           id: { in: standardKpiIds },
           isActive: true 
@@ -68,13 +68,13 @@ export class CumulativeKpiService {
 
       // CSV履歴の存在確認（1回だけ）
       const historyIds = [...new Set(updates.map(u => u.sourceFileId))];
-      const csvHistories = await db.csvFileHistory.findMany({
+      const csvHistories = await db.csv_file_history.findMany({
         where: { id: { in: historyIds } }
       });
       const csvHistoryMap = new Map(csvHistories.map(h => [h.id, h]));
 
       // 既存の累積KPIを一括取得
-      const existingKpis = await db.cumulativeKpi.findMany({
+      const existingKpis = await db.cumulative_kpis.findMany({
         where: { standardKpiId: { in: standardKpiIds } }
       });
       const existingKpiMap = new Map(existingKpis.map(kpi => [kpi.standardKpiId, kpi]));
@@ -137,14 +137,15 @@ export class CumulativeKpiService {
 
               // 新規累積KPIの作成（必要な場合）
               if (!cumulativeKpi) {
-                cumulativeKpi = await tx.cumulativeKpi.create({
+                cumulativeKpi = await tx.cumulative_kpis.create({
                   data: {
                     standardKpiId: update.standardKpiId,
                     standardKpiName: standardKpi.name,
                     cumulativeValue: 0,
                     unit: standardKpi.preferredUnit,
                     recordCount: 0,
-                    contributingFileIds: []
+                    contributingFileIds: [],
+                    updatedAt: new Date()
                   }
                 });
               }
@@ -154,18 +155,19 @@ export class CumulativeKpiService {
               const newRecordCount = cumulativeKpi.recordCount + update.recordCount;
               const newContributingFileIds = [...cumulativeKpi.contributingFileIds, update.sourceFileId];
 
-              await tx.cumulativeKpi.update({
+              await tx.cumulative_kpis.update({
                 where: { id: cumulativeKpi.id },
                 data: {
                   cumulativeValue: newCumulativeValue,
                   recordCount: newRecordCount,
                   contributingFileIds: newContributingFileIds,
-                  lastUpdated: new Date()
+                  lastUpdated: new Date(),
+                  updatedAt: new Date()
                 }
               });
 
               // 貢献度記録の作成
-              await tx.kpiContribution.create({
+              await tx.kpi_contributions.create({
                 data: {
                   cumulativeKpiId: cumulativeKpi.id,
                   csvFileHistoryId: update.sourceFileId,
@@ -208,7 +210,7 @@ export class CumulativeKpiService {
    * ダッシュボード表示用（添付仕様書 12.2.2 統合ダッシュボード画面）
    */
   static async getAllCumulativeKpis(): Promise<CumulativeKpiData[]> {
-    const kpis = await db.cumulativeKpi.findMany({
+    const kpis = await db.cumulative_kpis.findMany({
       orderBy: { lastUpdated: 'desc' }
     });
 
@@ -230,12 +232,12 @@ export class CumulativeKpiService {
    */
   static async getMissingKpis(): Promise<string[]> {
     // すべての標準KPI定義を取得
-    const allStandardKpis = await db.standardKpiDefinition.findMany({
+    const allStandardKpis = await db.standard_kpi_definitions.findMany({
       where: { isActive: true }
     });
 
     // 既存の累積KPIを取得
-    const existingKpis = await db.cumulativeKpi.findMany({
+    const existingKpis = await db.cumulative_kpis.findMany({
       select: { standardKpiId: true }
     });
 
@@ -255,7 +257,7 @@ export class CumulativeKpiService {
   static async removeFileContribution(fileId: number): Promise<void> {
     await db.$transaction(async (tx: any) => {
       // ファイルの貢献度を取得
-      const contributions = await tx.kpiContribution.findMany({
+      const contributions = await tx.kpi_contributions.findMany({
         where: { csvFileHistoryId: fileId },
         include: { cumulativeKpi: true }
       });
@@ -268,7 +270,7 @@ export class CumulativeKpiService {
         const newRecordCount = cumulativeKpi.recordCount - contribution.recordCount;
         const newContributingFileIds = cumulativeKpi.contributingFileIds.filter((id: any) => id !== fileId);
 
-        await tx.cumulativeKpi.update({
+        await tx.cumulative_kpis.update({
           where: { id: cumulativeKpi.id },
           data: {
             cumulativeValue: Math.max(0, newCumulativeValue), // 負の値を防ぐ
@@ -279,7 +281,7 @@ export class CumulativeKpiService {
         });
 
         // 貢献度記録を削除
-        await tx.kpiContribution.delete({
+        await tx.kpi_contributions.delete({
           where: { id: contribution.id }
         });
       }
@@ -292,45 +294,154 @@ export class CumulativeKpiService {
    */
   static async mapToStandardKpi(csvKpiId: string): Promise<StandardKpiMapping | null> {
     // 標準KPI定義から類似度を計算
-    const standardKpis = await db.standardKpiDefinition.findMany({
+    const standardKpis = await db.standard_kpi_definitions.findMany({
       where: { isActive: true }
     });
 
-    // 簡易的な文字列マッチング（実際にはEmbedding-based検索）
+    if (standardKpis.length === 0) {
+      console.warn('標準KPI定義が見つかりません。シードデータを実行してください。');
+      return null;
+    }
+
+    // 入力KPI IDを正規化（大文字・小文字、記号を統一）
+    const normalizedCsvKpiId = this.normalizeKpiId(csvKpiId);
+    
+    console.log(`🔍 KPIマッピング開始: "${csvKpiId}" (正規化: "${normalizedCsvKpiId}")`);
+
+    let bestMatch: StandardKpiMapping | null = null;
+    let highestConfidence = 0;
+
     for (const standardKpi of standardKpis) {
-      // エイリアスとの完全一致チェック
-      if (standardKpi.aliases.includes(csvKpiId.toUpperCase())) {
-        return {
+      let confidence = 0;
+      let reason = '';
+
+      // 1. エイリアスとの完全一致チェック（最高優先度）
+      const normalizedAliases = standardKpi.aliases.map(alias => this.normalizeKpiId(alias));
+      if (normalizedAliases.includes(normalizedCsvKpiId)) {
+        confidence = 0.95;
+        reason = 'エイリアス完全一致';
+      }
+      // 2. エイリアスとの部分一致チェック
+      else if (normalizedAliases.some(alias => 
+        alias.includes(normalizedCsvKpiId) || normalizedCsvKpiId.includes(alias)
+      )) {
+        confidence = 0.85;
+        reason = 'エイリアス部分一致';
+      }
+      // 3. 名前との完全一致チェック
+      else if (this.normalizeKpiId(standardKpi.name) === normalizedCsvKpiId) {
+        confidence = 0.90;
+        reason = '名前完全一致';
+      }
+      // 4. 名前との部分一致チェック
+      else if (this.normalizeKpiId(standardKpi.name).includes(normalizedCsvKpiId) || 
+               normalizedCsvKpiId.includes(this.normalizeKpiId(standardKpi.name))) {
+        confidence = 0.75;
+        reason = '名前部分一致';
+      }
+      // 5. ID部分一致チェック
+      else if (this.normalizeKpiId(standardKpi.id).includes(normalizedCsvKpiId) || 
+               normalizedCsvKpiId.includes(this.normalizeKpiId(standardKpi.id))) {
+        confidence = 0.70;
+        reason = 'ID部分一致';
+      }
+      // 6. キーワードベースの類似度チェック
+      else {
+        const keywordSimilarity = this.calculateKeywordSimilarity(normalizedCsvKpiId, standardKpi);
+        if (keywordSimilarity > 0.5) {
+          confidence = 0.50 + (keywordSimilarity * 0.2); // 0.5-0.7の範囲
+          reason = `キーワード類似度: ${Math.round(keywordSimilarity * 100)}%`;
+        }
+      }
+
+      // より高い信頼度のマッチングが見つかった場合は更新
+      if (confidence > highestConfidence) {
+        highestConfidence = confidence;
+        bestMatch = {
           csvKpiId,
           standardKpiId: standardKpi.id,
-          confidence: 0.95,
-          reason: 'エイリアス完全一致'
+          confidence,
+          reason
         };
       }
 
-      // 名前との部分一致チェック
-      if (standardKpi.name.includes(csvKpiId) || csvKpiId.includes(standardKpi.name)) {
-        return {
-          csvKpiId,
-          standardKpiId: standardKpi.id,
-          confidence: 0.8,
-          reason: '名前部分一致'
-        };
-      }
-
-      // ID部分一致チェック
-      if (standardKpi.id.toLowerCase().includes(csvKpiId.toLowerCase()) || 
-          csvKpiId.toLowerCase().includes(standardKpi.id.toLowerCase())) {
-        return {
-          csvKpiId,
-          standardKpiId: standardKpi.id,
-          confidence: 0.75,
-          reason: 'ID部分一致'
-        };
+      if (confidence > 0) {
+        console.log(`  📊 候補: ${standardKpi.id} (${standardKpi.name}) - 信頼度: ${Math.round(confidence * 100)}% (${reason})`);
       }
     }
 
-    return null; // マッピング候補が見つからない
+    if (bestMatch) {
+      console.log(`✅ 最適マッチ: ${bestMatch.standardKpiId} - 信頼度: ${Math.round(bestMatch.confidence * 100)}% (${bestMatch.reason})`);
+    } else {
+      console.log(`❌ マッチング候補が見つかりません: "${csvKpiId}"`);
+    }
+
+    return bestMatch;
+  }
+
+  /**
+   * KPI識別子の正規化
+   * 大文字・小文字、記号、空白を統一して比較しやすくする
+   */
+  private static normalizeKpiId(kpiId: string): string {
+    return kpiId
+      .toUpperCase()
+      .replace(/[_\-\s\.]/g, '') // アンダースコア、ハイフン、空白、ドットを削除
+      .replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)) // 全角数字を半角に
+      .replace(/[Ａ-Ｚａ-ｚ]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)) // 全角英字を半角に
+      .trim();
+  }
+
+  /**
+   * キーワードベースの類似度計算
+   * 共通キーワードの数と重要度に基づいて類似度を算出
+   */
+  private static calculateKeywordSimilarity(csvKpiId: string, standardKpi: any): number {
+    const csvKeywords = this.extractKeywords(csvKpiId);
+    const standardKeywords = this.extractKeywords(
+      `${standardKpi.name} ${standardKpi.aliases.join(' ')} ${standardKpi.id}`
+    );
+
+    if (csvKeywords.length === 0 || standardKeywords.length === 0) {
+      return 0;
+    }
+
+    // 共通キーワードの数を計算
+    const commonKeywords = csvKeywords.filter(keyword => 
+      standardKeywords.some(stdKeyword => 
+        stdKeyword.includes(keyword) || keyword.includes(stdKeyword)
+      )
+    );
+
+    // 類似度 = 共通キーワード数 / 最大キーワード数
+    const similarity = commonKeywords.length / Math.max(csvKeywords.length, standardKeywords.length);
+    
+    return similarity;
+  }
+
+  /**
+   * キーワード抽出
+   * 意味のある単語を抽出する
+   */
+  private static extractKeywords(text: string): string[] {
+    const normalized = this.normalizeKpiId(text);
+    
+    // 一般的なキーワードパターンを抽出
+    const keywords: string[] = [];
+    
+    // 英語キーワード
+    const englishMatches = normalized.match(/[A-Z]{2,}/g) || [];
+    keywords.push(...englishMatches);
+    
+    // 数字を含むパターン
+    const numberMatches = normalized.match(/[A-Z]*\d+[A-Z]*/g) || [];
+    keywords.push(...numberMatches);
+    
+    // 日本語キーワード（ひらがな・カタカナ・漢字）
+    const japaneseMatches = text.match(/[ぁ-んァ-ヶ一-龠]+/g) || [];
+    keywords.push(...japaneseMatches.map(k => k.trim()).filter(k => k.length > 1));
+    
+    return [...new Set(keywords)].filter(k => k.length > 1); // 重複除去、1文字以下除外
   }
 
   /**
@@ -344,16 +455,16 @@ export class CumulativeKpiService {
     missingKpisCount: number;
   }> {
     const [totalKpis, missingKpis, lastKpi] = await Promise.all([
-      db.cumulativeKpi.count(),
+      db.cumulative_kpis.count(),
       this.getMissingKpis(),
-      db.cumulativeKpi.findFirst({
+      db.cumulative_kpis.findFirst({
         orderBy: { lastUpdated: 'desc' },
         select: { lastUpdated: true }
       })
     ]);
 
     // 貢献ファイル数をカウント
-    const allKpis = await db.cumulativeKpi.findMany({
+    const allKpis = await db.cumulative_kpis.findMany({
       select: { contributingFileIds: true }
     });
     

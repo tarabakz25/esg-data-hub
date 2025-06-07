@@ -13,17 +13,17 @@ export default function BenchmarksPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Benchmarks</h1>
-          <p className="text-muted-foreground">Compare your ESG performance against industry peers</p>
+          <h1 className="text-3xl font-bold text-gray-900">ベンチマーク</h1>
+          <p className="text-muted-foreground">業界の同業他社とESGパフォーマンスを比較</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
             <Filter className="h-4 w-4 mr-2" />
-            Filters
+            フィルター
           </Button>
           <Button>
             <Target className="h-4 w-4 mr-2" />
-            Set Targets
+            目標設定
           </Button>
         </div>
       </div>
@@ -32,51 +32,51 @@ export default function BenchmarksPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overall ESG Score</CardTitle>
+            <CardTitle className="text-sm font-medium">総合ESGスコア</CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">78</div>
             <div className="flex items-center gap-1 text-xs">
               <TrendingUp className="h-3 w-3 text-green-500" />
-              <span className="text-green-500">+5 vs industry avg (73)</span>
+              <span className="text-green-500">業界平均より+5 (73)</span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Industry Rank</CardTitle>
+            <CardTitle className="text-sm font-medium">業界ランキング</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12th</div>
-            <p className="text-xs text-muted-foreground">out of 156 companies</p>
+            <div className="text-2xl font-bold">12位</div>
+            <p className="text-xs text-muted-foreground">156社中</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Percentile</CardTitle>
+            <CardTitle className="text-sm font-medium">パーセンタイル</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">92nd</div>
+            <div className="text-2xl font-bold">92位</div>
             <div className="flex items-center gap-1 text-xs">
               <TrendingUp className="h-3 w-3 text-green-500" />
-              <span className="text-green-500">Top 10%</span>
+              <span className="text-green-500">上位10%</span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Improvement Areas</CardTitle>
+            <CardTitle className="text-sm font-medium">改善領域</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">Key areas identified</p>
+            <p className="text-xs text-muted-foreground">主要領域を特定</p>
           </CardContent>
         </Card>
       </div>
@@ -84,58 +84,58 @@ export default function BenchmarksPage() {
       {/* Benchmark Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Benchmark Settings</CardTitle>
-          <CardDescription>Configure comparison parameters and peer groups</CardDescription>
+          <CardTitle>ベンチマーク設定</CardTitle>
+          <CardDescription>比較パラメータと同業他社グループの設定</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Select>
               <SelectTrigger>
-                <SelectValue placeholder="Industry" />
+                <SelectValue placeholder="業界" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="manufacturing">Manufacturing</SelectItem>
-                <SelectItem value="technology">Technology</SelectItem>
-                <SelectItem value="financial">Financial Services</SelectItem>
-                <SelectItem value="healthcare">Healthcare</SelectItem>
-                <SelectItem value="energy">Energy</SelectItem>
+                <SelectItem value="manufacturing">製造業</SelectItem>
+                <SelectItem value="technology">テクノロジー</SelectItem>
+                <SelectItem value="financial">金融サービス</SelectItem>
+                <SelectItem value="healthcare">ヘルスケア</SelectItem>
+                <SelectItem value="energy">エネルギー</SelectItem>
               </SelectContent>
             </Select>
 
             <Select>
               <SelectTrigger>
-                <SelectValue placeholder="Company Size" />
+                <SelectValue placeholder="企業規模" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="large-cap">Large Cap (>$10B)</SelectItem>
-                <SelectItem value="mid-cap">Mid Cap ($2-10B)</SelectItem>
-                <SelectItem value="small-cap">Small Cap (<$2B)</SelectItem>
-                <SelectItem value="all">All Sizes</SelectItem>
+                <SelectItem value="large-cap">大型株（100億ドル以上）</SelectItem>
+                <SelectItem value="mid-cap">中型株（20-100億ドル）</SelectItem>
+                <SelectItem value="small-cap">小型株（20億ドル未満）</SelectItem>
+                <SelectItem value="all">全規模</SelectItem>
               </SelectContent>
             </Select>
 
             <Select>
               <SelectTrigger>
-                <SelectValue placeholder="Geography" />
+                <SelectValue placeholder="地域" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="global">Global</SelectItem>
-                <SelectItem value="apac">Asia Pacific</SelectItem>
-                <SelectItem value="americas">Americas</SelectItem>
+                <SelectItem value="global">グローバル</SelectItem>
+                <SelectItem value="apac">アジア太平洋</SelectItem>
+                <SelectItem value="americas">南北アメリカ</SelectItem>
                 <SelectItem value="emea">EMEA</SelectItem>
-                <SelectItem value="japan">Japan</SelectItem>
+                <SelectItem value="japan">日本</SelectItem>
               </SelectContent>
             </Select>
 
             <Select>
               <SelectTrigger>
-                <SelectValue placeholder="Time Period" />
+                <SelectValue placeholder="期間" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="latest">Latest Year</SelectItem>
-                <SelectItem value="3yr">3 Year Average</SelectItem>
-                <SelectItem value="5yr">5 Year Trend</SelectItem>
-                <SelectItem value="custom">Custom Period</SelectItem>
+                <SelectItem value="latest">最新年度</SelectItem>
+                <SelectItem value="3yr">3年平均</SelectItem>
+                <SelectItem value="5yr">5年トレンド</SelectItem>
+                <SelectItem value="custom">カスタム期間</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -145,19 +145,19 @@ export default function BenchmarksPage() {
       {/* Benchmark Analysis Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="environmental">Environmental</TabsTrigger>
-          <TabsTrigger value="social">Social</TabsTrigger>
-          <TabsTrigger value="governance">Governance</TabsTrigger>
-          <TabsTrigger value="peers">Peer Analysis</TabsTrigger>
+          <TabsTrigger value="overview">概要</TabsTrigger>
+          <TabsTrigger value="environmental">環境</TabsTrigger>
+          <TabsTrigger value="social">社会</TabsTrigger>
+          <TabsTrigger value="governance">ガバナンス</TabsTrigger>
+          <TabsTrigger value="peers">同業他社分析</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>ESG Score Breakdown</CardTitle>
-                <CardDescription>Performance across all ESG dimensions</CardDescription>
+                <CardTitle>ESGスコア内訳</CardTitle>
+                <CardDescription>全ESG分野でのパフォーマンス</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -165,11 +165,11 @@ export default function BenchmarksPage() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <Leaf className="h-4 w-4 text-green-500" />
-                        <span>Environmental</span>
+                        <span>環境</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">82</span>
-                        <Badge variant="default">Above Avg</Badge>
+                        <Badge variant="default">平均以上</Badge>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -182,11 +182,11 @@ export default function BenchmarksPage() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-blue-500" />
-                        <span>Social</span>
+                        <span>社会</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">75</span>
-                        <Badge variant="secondary">Average</Badge>
+                        <Badge variant="secondary">平均</Badge>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -199,11 +199,11 @@ export default function BenchmarksPage() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <Globe className="h-4 w-4 text-purple-500" />
-                        <span>Governance</span>
+                        <span>ガバナンス</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">76</span>
-                        <Badge variant="outline">Below Avg</Badge>
+                        <Badge variant="outline">平均以下</Badge>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -217,36 +217,36 @@ export default function BenchmarksPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Industry Position</CardTitle>
-                <CardDescription>Your position within the manufacturing sector</CardDescription>
+                <CardTitle>業界内ポジション</CardTitle>
+                <CardDescription>製造業セクター内での位置</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-green-600">Top 8%</div>
-                    <p className="text-sm text-muted-foreground">Manufacturing Industry</p>
+                    <div className="text-3xl font-bold text-green-600">上位8%</div>
+                    <p className="text-sm text-muted-foreground">製造業界</p>
                   </div>
                   
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Industry Leader</span>
-                      <span className="text-sm font-medium">95 (Top 1%)</span>
+                      <span className="text-sm">業界リーダー</span>
+                      <span className="text-sm font-medium">95 (上位1%)</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Top Quartile</span>
-                      <span className="text-sm font-medium">87 (Top 25%)</span>
+                      <span className="text-sm">上位四分位</span>
+                      <span className="text-sm font-medium">87 (上位25%)</span>
                     </div>
                     <div className="flex justify-between items-center bg-blue-50 p-2 rounded">
-                      <span className="text-sm font-medium">Your Score</span>
-                      <span className="text-sm font-bold">78 (Top 8%)</span>
+                      <span className="text-sm font-medium">あなたのスコア</span>
+                      <span className="text-sm font-bold">78 (上位8%)</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Industry Average</span>
-                      <span className="text-sm font-medium">73 (50th %ile)</span>
+                      <span className="text-sm">業界平均</span>
+                      <span className="text-sm font-medium">73 (50パーセンタイル)</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Bottom Quartile</span>
-                      <span className="text-sm font-medium">58 (Bottom 25%)</span>
+                      <span className="text-sm">下位四分位</span>
+                      <span className="text-sm font-medium">58 (下位25%)</span>
                     </div>
                   </div>
                 </div>
@@ -256,8 +256,8 @@ export default function BenchmarksPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Performance Trends</CardTitle>
-              <CardDescription>ESG score evolution over the past 5 years</CardDescription>
+              <CardTitle>パフォーマンストレンド</CardTitle>
+              <CardDescription>過去5年間のESGスコア推移</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-5 gap-4">
@@ -285,15 +285,15 @@ export default function BenchmarksPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Carbon Emissions</CardTitle>
-                <CardDescription>Scope 1, 2, and 3 emissions comparison</CardDescription>
+                <CardTitle>炭素排出量</CardTitle>
+                <CardDescription>スコープ1、2、3排出量の比較</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {[
-                    { metric: "Scope 1 Emissions", value: "1,247 tCO2e", benchmark: "1,450 tCO2e", status: "better" },
-                    { metric: "Scope 2 Emissions", value: "2,835 tCO2e", benchmark: "2,920 tCO2e", status: "better" },
-                    { metric: "Scope 3 Emissions", value: "15,420 tCO2e", benchmark: "14,200 tCO2e", status: "worse" }
+                    { metric: "スコープ1排出量", value: "1,247 tCO2e", benchmark: "1,450 tCO2e", status: "better" },
+                    { metric: "スコープ2排出量", value: "2,835 tCO2e", benchmark: "2,920 tCO2e", status: "better" },
+                    { metric: "スコープ3排出量", value: "15,420 tCO2e", benchmark: "14,200 tCO2e", status: "worse" }
                   ].map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between items-center">
@@ -305,12 +305,12 @@ export default function BenchmarksPage() {
                             <TrendingUp className="h-4 w-4 text-red-500" />
                           )}
                           <Badge variant={item.status === "better" ? "default" : "destructive"}>
-                            {item.status === "better" ? "Better" : "Needs Improvement"}
+                            {item.status === "better" ? "良好" : "改善が必要"}
                           </Badge>
                         </div>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Your: {item.value} | Industry Avg: {item.benchmark}
+                        あなた: {item.value} | 業界平均: {item.benchmark}
                       </div>
                     </div>
                   ))}
@@ -320,25 +320,25 @@ export default function BenchmarksPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Resource Efficiency</CardTitle>
-                <CardDescription>Energy and water usage metrics</CardDescription>
+                <CardTitle>資源効率</CardTitle>
+                <CardDescription>エネルギーと水使用量の指標</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {[
-                    { metric: "Energy Intensity", value: "2.3 MWh/unit", benchmark: "2.8 MWh/unit", status: "better" },
-                    { metric: "Water Usage", value: "450 m³/unit", benchmark: "520 m³/unit", status: "better" },
-                    { metric: "Waste Generation", value: "12 kg/unit", benchmark: "9.5 kg/unit", status: "worse" }
+                    { metric: "エネルギー原単位", value: "2.3 MWh/単位", benchmark: "2.8 MWh/単位", status: "better" },
+                    { metric: "水使用量", value: "450 m³/単位", benchmark: "520 m³/単位", status: "better" },
+                    { metric: "廃棄物発生量", value: "12 kg/単位", benchmark: "9.5 kg/単位", status: "worse" }
                   ].map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="font-medium">{item.metric}</span>
                         <Badge variant={item.status === "better" ? "default" : "destructive"}>
-                          {item.status === "better" ? "Better" : "Needs Improvement"}
+                          {item.status === "better" ? "良好" : "改善が必要"}
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Your: {item.value} | Industry Avg: {item.benchmark}
+                        あなた: {item.value} | 業界平均: {item.benchmark}
                       </div>
                     </div>
                   ))}
@@ -349,15 +349,15 @@ export default function BenchmarksPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Environmental Targets</CardTitle>
-              <CardDescription>Progress towards science-based targets</CardDescription>
+              <CardTitle>環境目標</CardTitle>
+              <CardDescription>科学的根拠に基づく目標への進捗</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { target: "Net Zero by 2050", progress: 35, current: "35% reduction", goal: "100% reduction" },
-                  { target: "50% Renewable Energy", progress: 78, current: "78% renewable", goal: "50% target" },
-                  { target: "30% Waste Reduction", progress: 60, current: "18% reduction", goal: "30% target" }
+                  { target: "2050年ネットゼロ", progress: 35, current: "35%削減", goal: "100%削減" },
+                  { target: "再生可能エネルギー50%", progress: 78, current: "78%再生可能", goal: "50%目標" },
+                  { target: "廃棄物30%削減", progress: 60, current: "18%削減", goal: "30%目標" }
                 ].map((item, index) => (
                   <div key={index} className="space-y-3">
                     <div>
@@ -365,7 +365,7 @@ export default function BenchmarksPage() {
                       <p className="text-sm text-muted-foreground">{item.current}</p>
                     </div>
                     <Progress value={item.progress} />
-                    <p className="text-xs text-muted-foreground">{item.progress}% of {item.goal}</p>
+                    <p className="text-xs text-muted-foreground">{item.goal}の{item.progress}%</p>
                   </div>
                 ))}
               </div>
@@ -377,25 +377,25 @@ export default function BenchmarksPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Workforce Diversity</CardTitle>
-                <CardDescription>Diversity metrics vs industry benchmarks</CardDescription>
+                <CardTitle>労働力の多様性</CardTitle>
+                <CardDescription>業界ベンチマークとの多様性指標比較</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {[
-                    { metric: "Women in Leadership", value: "42%", benchmark: "35%", status: "better" },
-                    { metric: "Ethnic Minority Representation", value: "28%", benchmark: "32%", status: "worse" },
-                    { metric: "Pay Equity Ratio", value: "0.97", benchmark: "0.94", status: "better" }
+                    { metric: "女性リーダーシップ", value: "42%", benchmark: "35%", status: "better" },
+                    { metric: "少数民族代表", value: "28%", benchmark: "32%", status: "worse" },
+                    { metric: "賃金公平比率", value: "0.97", benchmark: "0.94", status: "better" }
                   ].map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="font-medium">{item.metric}</span>
                         <Badge variant={item.status === "better" ? "default" : "destructive"}>
-                          {item.status === "better" ? "Above Average" : "Below Average"}
+                          {item.status === "better" ? "平均以上" : "平均以下"}
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Your: {item.value} | Industry Avg: {item.benchmark}
+                        あなた: {item.value} | 業界平均: {item.benchmark}
                       </div>
                     </div>
                   ))}
@@ -405,25 +405,25 @@ export default function BenchmarksPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Employee Wellbeing</CardTitle>
-                <CardDescription>Health and safety performance indicators</CardDescription>
+                <CardTitle>従業員ウェルビーイング</CardTitle>
+                <CardDescription>健康と安全のパフォーマンス指標</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {[
-                    { metric: "Employee Satisfaction", value: "8.2/10", benchmark: "7.8/10", status: "better" },
-                    { metric: "Safety Incidents", value: "0.8 per 100k hours", benchmark: "1.2 per 100k hours", status: "better" },
-                    { metric: "Training Hours per Employee", value: "42 hours", benchmark: "38 hours", status: "better" }
+                    { metric: "従業員満足度", value: "8.2/10", benchmark: "7.8/10", status: "better" },
+                    { metric: "安全事故", value: "10万時間あたり0.8件", benchmark: "10万時間あたり1.2件", status: "better" },
+                    { metric: "従業員1人あたり研修時間", value: "42時間", benchmark: "38時間", status: "better" }
                   ].map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="font-medium">{item.metric}</span>
                         <Badge variant={item.status === "better" ? "default" : "destructive"}>
-                          {item.status === "better" ? "Above Average" : "Below Average"}
+                          {item.status === "better" ? "平均以上" : "平均以下"}
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Your: {item.value} | Industry Avg: {item.benchmark}
+                        あなた: {item.value} | 業界平均: {item.benchmark}
                       </div>
                     </div>
                   ))}
@@ -437,25 +437,25 @@ export default function BenchmarksPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Board Composition</CardTitle>
-                <CardDescription>Board structure and independence metrics</CardDescription>
+                <CardTitle>取締役会構成</CardTitle>
+                <CardDescription>取締役会構造と独立性指標</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {[
-                    { metric: "Board Independence", value: "67%", benchmark: "72%", status: "worse" },
-                    { metric: "Women on Board", value: "33%", benchmark: "28%", status: "better" },
-                    { metric: "Average Tenure", value: "4.2 years", benchmark: "5.1 years", status: "better" }
+                    { metric: "取締役会独立性", value: "67%", benchmark: "72%", status: "worse" },
+                    { metric: "女性取締役", value: "33%", benchmark: "28%", status: "better" },
+                    { metric: "平均在任期間", value: "4.2年", benchmark: "5.1年", status: "better" }
                   ].map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="font-medium">{item.metric}</span>
                         <Badge variant={item.status === "better" ? "default" : "destructive"}>
-                          {item.status === "better" ? "Above Average" : "Below Average"}
+                          {item.status === "better" ? "平均以上" : "平均以下"}
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Your: {item.value} | Industry Avg: {item.benchmark}
+                        あなた: {item.value} | 業界平均: {item.benchmark}
                       </div>
                     </div>
                   ))}
@@ -465,25 +465,25 @@ export default function BenchmarksPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Risk Management</CardTitle>
-                <CardDescription>Risk oversight and compliance metrics</CardDescription>
+                <CardTitle>リスク管理</CardTitle>
+                <CardDescription>リスク監督とコンプライアンス指標</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {[
-                    { metric: "ESG Risk Score", value: "Low (15)", benchmark: "Medium (28)", status: "better" },
-                    { metric: "Compliance Violations", value: "0", benchmark: "0.3", status: "better" },
-                    { metric: "Audit Committee Independence", value: "100%", benchmark: "95%", status: "better" }
+                    { metric: "ESGリスクスコア", value: "低 (15)", benchmark: "中 (28)", status: "better" },
+                    { metric: "コンプライアンス違反", value: "0", benchmark: "0.3", status: "better" },
+                    { metric: "監査委員会独立性", value: "100%", benchmark: "95%", status: "better" }
                   ].map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="font-medium">{item.metric}</span>
                         <Badge variant={item.status === "better" ? "default" : "destructive"}>
-                          {item.status === "better" ? "Above Average" : "Below Average"}
+                          {item.status === "better" ? "平均以上" : "平均以下"}
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Your: {item.value} | Industry Avg: {item.benchmark}
+                        あなた: {item.value} | 業界平均: {item.benchmark}
                       </div>
                     </div>
                   ))}
@@ -496,27 +496,27 @@ export default function BenchmarksPage() {
         <TabsContent value="peers" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Peer Companies</CardTitle>
-              <CardDescription>Direct comparison with similar companies in your industry</CardDescription>
+              <CardTitle>同業他社</CardTitle>
+              <CardDescription>業界内の類似企業との直接比較</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {[
-                  { company: "Your Company", score: 78, rank: 12, trend: "up" },
-                  { company: "Company A", score: 82, rank: 8, trend: "up" },
-                  { company: "Company B", score: 81, rank: 9, trend: "down" },
-                  { company: "Company C", score: 79, rank: 10, trend: "up" },
-                  { company: "Company D", score: 77, rank: 15, trend: "stable" },
-                  { company: "Company E", score: 76, rank: 18, trend: "up" }
+                  { company: "あなたの会社", score: 78, rank: 12, trend: "up" },
+                  { company: "A社", score: 82, rank: 8, trend: "up" },
+                  { company: "B社", score: 81, rank: 9, trend: "down" },
+                  { company: "C社", score: 79, rank: 10, trend: "up" },
+                  { company: "D社", score: 77, rank: 15, trend: "stable" },
+                  { company: "E社", score: 76, rank: 18, trend: "up" }
                 ].map((peer, index) => (
-                  <div key={index} className={`flex items-center justify-between p-4 rounded-lg border ${peer.company === "Your Company" ? "bg-blue-50 border-blue-200" : ""}`}>
+                  <div key={index} className={`flex items-center justify-between p-4 rounded-lg border ${peer.company === "あなたの会社" ? "bg-blue-50 border-blue-200" : ""}`}>
                     <div className="flex items-center gap-4">
                       <div className="text-2xl font-bold w-8">{peer.rank}</div>
                       <div>
-                        <h4 className={`font-medium ${peer.company === "Your Company" ? "font-bold" : ""}`}>
+                        <h4 className={`font-medium ${peer.company === "あなたの会社" ? "font-bold" : ""}`}>
                           {peer.company}
                         </h4>
-                        <p className="text-sm text-muted-foreground">Manufacturing Sector</p>
+                        <p className="text-sm text-muted-foreground">製造業セクター</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -530,7 +530,9 @@ export default function BenchmarksPage() {
                           ) : (
                             <div className="h-3 w-3" />
                           )}
-                          <span className="text-xs text-muted-foreground capitalize">{peer.trend}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {peer.trend === "up" ? "上昇" : peer.trend === "down" ? "下降" : "安定"}
+                          </span>
                         </div>
                       </div>
                     </div>

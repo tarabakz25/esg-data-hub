@@ -4,6 +4,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { auth } from '@/lib/auth';
+import { AutoProcessingChain } from '@/lib/services/auto-processing-chain';
 
 // セキュリティ設定
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB (本番用に増加)
@@ -215,6 +216,19 @@ export async function POST(request: NextRequest) {
       processingTimeMs: processingTime,
       clientIp,
       userId
+    });
+
+    // 🎯 自動処理チェーンをバックグラウンドで開始
+    // アップロード完了後、履歴作成と自動処理を実行
+    setImmediate(async () => {
+      try {
+        console.log(`自動処理チェーン開始: Upload ID ${upload.id}`);
+        await AutoProcessingChain.executeAutoProcessing(upload.id);
+        console.log(`自動処理チェーン完了: Upload ID ${upload.id}`);
+      } catch (processingError) {
+        console.error(`自動処理チェーンエラー: Upload ID ${upload.id}`, processingError);
+        // 処理エラーはアップロード成功レスポンスに影響しない
+      }
     });
 
     return NextResponse.json(

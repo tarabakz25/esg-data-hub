@@ -159,7 +159,7 @@ export default function DashboardPage() {
                 <stat.icon className="h-4 w-4 text-gray-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                <div className="text-2xl font-bold text-white">{stat.value}</div>
                 <div className="flex items-center space-x-1 text-xs text-gray-600">
                   {stat.changeType === "increase" ? (
                     <TrendingUp className="h-3 w-3 text-green-500" />
@@ -198,7 +198,7 @@ export default function DashboardPage() {
                     alert.type === "info" ? "bg-blue-500" : "bg-green-500"
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-gray-900">{alert.title}</h4>
+                    <h4 className="text-sm font-medium text-white">{alert.title}</h4>
                     <p className="text-sm text-gray-600 mt-1">{alert.description}</p>
                     <p className="text-xs text-gray-400 mt-1">{alert.time}</p>
                   </div>
@@ -233,7 +233,7 @@ export default function DashboardPage() {
                 }`} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-900">{activity.action}</span>
+                    <span className="text-sm font-medium text-white">{activity.action}</span>
                     <Badge variant="outline" className="text-xs">{activity.target}</Badge>
                   </div>
                   <div className="flex items-center space-x-2 mt-1">
@@ -269,7 +269,7 @@ export default function DashboardPage() {
             {complianceStatus.map((item) => (
               <div key={item.category} className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium text-gray-900">{item.category}</h4>
+                  <h4 className="text-sm font-medium text-white">{item.category}</h4>
                   <Badge variant={item.progress >= 80 ? "default" : "secondary"}>
                     {item.status}
                   </Badge>
